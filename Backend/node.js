@@ -41,6 +41,21 @@ app.get('/ReactTask', (req, res) => {
 
  })
 
+ app.post('/ReactTask', (req, res) => {
+    const { Firstname, Lastname, NationalId, Email, Password, District, MeterNumber, PhaseType, InstallationDate, Telephone } = req.body;
+    connection.query(
+        'INSERT INTO Registration (Firstname, Lastname, NationalId, Email, Password, District, MeterNumber, PhaseType, InstallationDate, Telephone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [Firstname, Lastname, NationalId, Email, Password, District, MeterNumber, PhaseType, InstallationDate, Telephone],
+        (err) => {
+            if (err) {
+                res.json({success: false, message: 'Error inserting data'});
+            } else {
+                res.json({success: true, message: 'Data inserted successfully'});
+            }
+        }
+    );
+ });
+
  app.listen(port, () => {
-    console.log(`Belly  is running on port ${port}`);
+    console.log(`Belly  is running on port ${port}/save-user`);
  })
