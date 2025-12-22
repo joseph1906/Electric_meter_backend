@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import axios from 'axios';
 
 export default function RegistrationForm() {
 
@@ -59,10 +60,10 @@ export default function RegistrationForm() {
 
   const handleSubmit = () => {
     if (validateForm()) {
-      router.push('/DrawerIndex');
+      router.push('/DrawerIndex'); 
     } else {
-      Alert.alert('Error', 'Form validation failed');
-    }
+  Alert.alert('Error', 'Form validation failed');
+}
   };
 
   return (
@@ -77,8 +78,6 @@ export default function RegistrationForm() {
                       </TouchableOpacity>
            <Text style={styles.title}>Customer Registration</Text>
       </View>
-
-
       <TextInput
         placeholder="First Name"
         style={styles.input}
