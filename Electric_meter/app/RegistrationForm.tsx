@@ -14,6 +14,7 @@ import {
   View
 } from 'react-native';
 import axios from 'axios';
+import colors from '@/assets/styling/colors';
 
 export default function RegistrationForm() {
 
@@ -60,6 +61,9 @@ export default function RegistrationForm() {
 
   const handleSubmit = () => {
     if (validateForm()) {
+      axios.post('http://localhost:3000/ReactTask', form)
+      .then(res => console.log("Registered successfully"))
+      .catch(err => console.log(err))
       router.push('/DrawerIndex'); 
     } else {
   Alert.alert('Error', 'Form validation failed');
@@ -138,13 +142,13 @@ export default function RegistrationForm() {
         value={form.MeterNumber}
         onChangeText={(text) => handleChange('MeterNumber', text)}
       />
-
 <Picker
   selectedValue={form.District}
+  placeholder='Select District'
   onValueChange={(itemValue) => handleChange('District', itemValue)}
-  style={styles.picker} 
+  style={styles.picker}
 >
-  <Picker.Item label="Select District" value="default" />
+  <Picker.Item label="Select District" value=""/>
   <Picker.Item label="Abim" value="Abim" />
   <Picker.Item label="Adjumani" value="Adjumani" />
   <Picker.Item label="Agago" value="Agago" />
@@ -284,7 +288,7 @@ export default function RegistrationForm() {
         onValueChange={(itemValue) => handleChange('PhaseType', itemValue)}
         style={styles.picker} 
       >
-        <Picker.Item label="Select Phase Type" value=""/>
+        <Picker.Item label="Select Phase Type" value="default"/>
         <Picker.Item label="Single Phase" value="Single Phase"/>
         <Picker.Item label="Three Phase" value="Three Phase"/>
       </Picker>
@@ -336,17 +340,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     fontSize: 15,
     fontStyle:"normal"
-  },
+  },  
 
   picker: {
     borderWidth: 1, 
-    borderColor: '#ccc', 
+    borderColor: '#CCC', 
     backgroundColor: "#fff",
     width: "100%",
     height: "5%",
     marginBottom: 10,
     borderRadius: 5,
-    color: "#d9d9d9",
+    color: "#000",
     fontSize: 15,
   },
   

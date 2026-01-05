@@ -1,71 +1,118 @@
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3000;
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
-const cors = require('cors');
 require('dotenv').config();
 
-app.use(cors());
-app.use(express.json()); 
+const port = process.env.PORT || 3000;
 
-const pool = mysql.createPool({
+app.use(express.json());
+
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+});
+
+const connection = mysql.createConnection({
     host: process.env.DatabaseHost,
     user: process.env.DatabaseUser,
     password: process.env.DatabasePassword,
     database: process.env.DatabaseName,
-    port: process.env.DatabasePort || 3306,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+});
+
+connection.connect((err) => {
+    if (err) {
+        console.log('Database error:', err.message);
+    } else {
+        console.log('✅ Connected to MySQL');
+    }
 });
 
 app.post('/ReactTask', async (req, res) => {
+    console.log('📝 Registration request received');
+    
     try {
-        const requiredFields = ['Firstname', 'Lastname', 'Email', 'Password', 'District', 'MeterNumber'];
-        for (const field of requiredFields) {
-            if (!req.body[field]) {
-                return res.status(400).json({ error: `${field} is required` });
-            }
-        }
-
-        const hashedPassword = await bcrypt.hash(req.body.Password, 10);
+        const checkSql = 'SELECT * FROM Registration WHERE Email = ? OR MeterNumber = ?';
+        const checkValues = [req.body.Email, req.body.MeterNumber];
         
-        const sql = 'INSERT INTO Registration (Firstname, Lastname, Email, Password, District, MeterNumber, PhaseType, InstallationDate, PaymentMode, Declaration) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-        const values = [
-            req.body.Firstname,
-            req.body.Lastname,
-            req.body.Email,
-            hashedPassword,
-            req.body.District,
-            req.body.MeterNumber,
-            req.body.PhaseType || null,
-            req.body.InstallationDate || null,
-            req.body.PaymentMode || null,
-            req.body.Declaration || false
-        ];
-
-        pool.execute(sql, values, (err, data) => {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Database operation failed' });
+        connection.query(checkSql, checkValues, (checkErr, checkResults) => {
+            if (checkErr) {
+                console.log('Check error:', checkErr.message);
+                return res.json({ error: 'Server error' });
             }
-            return res.status(201).json({ 
-                message: 'User created successfully', 
-                id: data.insertId 
+            
+            if (checkResults.length > 0) {
+                const existingUser = checkResults[0];
+                
+                if (existingUser.Email === req.body.Email) {
+                    console.log('❌ Email already registered:', req.body.Email);
+                    return res.json({ 
+                        success: false,
+                        error: 'Email is already registered' 
+                    });
+                }
+                
+                if (existingUser.MeterNumber === req.body.MeterNumber) {
+                    console.log('❌ Meter number already registered:', req.body.MeterNumber);
+                    return res.json({ 
+                        success: false,
+                        error: 'Meter number is already registered' 
+                    });
+                }
+            }
+            
+            bcrypt.hash(req.body.Password, 10, (hashErr, hashedPassword) => {
+                if (hashErr) {
+                    console.log('Hash error:', hashErr.message);
+                    return res.json({ error: 'Server error' });
+                }
+                
+                const insertSql = `
+                    INSERT INTO Registration 
+                    (Firstname, Lastname, NationalId, Telephone, Email, Password, District, MeterNumber, PhaseType, Declaration) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `;
+                
+                const insertValues = [
+                    req.body.Firstname,
+                    req.body.Lastname,
+                    req.body.NationalId || null,
+                    req.body.Telephone || null,
+                    req.body.Email,
+                    hashedPassword,
+                    req.body.District,
+                    req.body.MeterNumber,
+                    req.body.PhaseType || null,
+                    req.body.Declaration || false
+                ];
+                
+                connection.query(insertSql, insertValues, (insertErr, result) => {
+                    if (insertErr) {
+                        console.log('Insert error:', insertErr.message);
+                        return res.json({ error: 'Failed to save to database' });
+                    }
+                    
+                    console.log('✅ User saved, ID:', result.insertId);
+                    return res.json({ 
+                        success: true,
+                        message: 'Registration successful',
+                        id: result.insertId 
+                    });
+                });
             });
         });
+        
     } catch (error) {
-        console.error('Server error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.log('Error:', error.message);
+        res.json({ error: 'Server error' });
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-}).noeon('error', (err) => {
-    console.error('Server failed to start:', err.message);
-    if (err.code === 'EADDRINUSE') {
-        console.log(`Port ${port} is already in use. Try a different port.`);
-    }
+// Change this line at the bottom:
+app.listen(port, '0.0.0.0', () => {
+    console.log(`🚀 Server running at:`);
+    console.log(`   Local: http://localhost:${port}`);
+    console.log(`   Network: http://YOUR_IP:${port}`);
+    console.log(`📝 Use the Network URL on your phone!`);
 });
