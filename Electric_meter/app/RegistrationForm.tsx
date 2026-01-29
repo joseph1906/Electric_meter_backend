@@ -61,7 +61,7 @@ export default function RegistrationForm() {
 
   const handleSubmit = () => {
     if (validateForm()) {
-      axios.post('http://localhost:3000/ReactTask', form)
+      axios.post('http://192.168.1.4:/ReactTask', form)
       .then(res => console.log("Registered successfully"))
       .catch(err => console.log(err))
       router.push('/DrawerIndex'); 
