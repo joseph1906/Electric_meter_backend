@@ -14,11 +14,11 @@ app.use(express.urlencoded({ extended: true }));
 console.log('🚀 Starting server...');
 
 const db = mysql.createConnection({
-  host: '127.0.0.1',
-  user: 'root',
-  password: 'Mamanlucie1906@@',
-  database: 'ReactTask',
-  port: 3306
+  host: process.env.DatabaseHost,
+  user: process.env.DatabaseUser,
+  password: process.env.DatabasePassword,
+  database: process.env.DatabaseName,
+  port: process.env.DatabasePort
 });
 
 let isDbConnected = false;

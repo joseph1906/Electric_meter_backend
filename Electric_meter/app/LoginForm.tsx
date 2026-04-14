@@ -11,7 +11,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const API_BASE_URL = 'http://192.168.1.6:5000';
+  const API_BASE_URL = 'http://192.168.1.9:5000';
 
   const handleSubmit = async () => {
     setErrorMessage('');
