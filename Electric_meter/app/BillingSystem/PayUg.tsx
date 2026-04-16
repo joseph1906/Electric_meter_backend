@@ -35,24 +35,23 @@ export default function PayUg() {
         Alert.alert("Processing PayUg Payment...", "Please wait...");
 
         setTimeout(() => {
-            const paymentSuccess = Math.random() > 0.3;
+        const paymentSuccess = Math.random() > 0.3;
+        
+        if (paymentSuccess) {
+            const units = calculateUnits(amount);
             
-            if (paymentSuccess) {
-                const units = calculateUnits(amount);
-                
-                setLastPayment({ 
-                    method: "PayUg", 
-                    amount: amount, 
-                    units,
-                    phoneNumber: cleanPhoneNumber
-                });
-
-                router.push("/BillingSystem/Printable");
-            } else {
-                Alert.alert("Payment Failed", "Please check your details and try again.");
-            }
-        }, 2000);
-    };
+            // ✅ phoneNumber is already included, but make sure it's there
+            setLastPayment({ 
+                method: "PayUg", 
+                amount: amount, 
+                units,
+                phoneNumber: cleanPhoneNumber  // ← Already there, good!
+            });
+            
+            router.push("/BillingSystem/Printable");
+        }
+    }, 2000);
+};
 
     const formatPhoneNumber = (text: string) => {
         const cleaned = text.replace(/\D/g, '');

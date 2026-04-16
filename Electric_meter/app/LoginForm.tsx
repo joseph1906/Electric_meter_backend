@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function LoginForm() {
       });
 
       if (response.data.success) {
+        await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
         // ✅ Only registered users get here
         router.push('/DrawerIndex');
       }

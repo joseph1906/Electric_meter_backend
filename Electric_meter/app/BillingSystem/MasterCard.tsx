@@ -5,7 +5,7 @@ import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } fr
 import { TextInput } from 'react-native-paper';
 import { PaymentContext } from './CentralPayment';
 
-export default function Visa() {
+export default function MasterCard() {
     const params = useLocalSearchParams();
     const amount = params.amtNum ? Number(params.amtNum) : 0;
     
@@ -24,16 +24,18 @@ export default function Visa() {
 
         setTimeout(() => {
             const units = amount / 1000;
-            setLastPayment({ 
-                method: 'Visa', 
-                amount, 
-                units,
-                cardLastFour: cardNumber.slice(-4) 
-            });
+            
+           // More secure option - only store last 4 digits
+setLastPayment({ 
+    method: 'MasterCard', 
+    amount, 
+    units,
+    cardLastFour: cardNumber.slice(-4),
+    phoneNumber: `MasterCard_${cardNumber.slice(-4)}`  // Stores "VISA_1111"
+});
             router.push('/BillingSystem/Printable');
         }, 2000);
     };
-
 
     const handleBack = () => {
         router.push("/DrawerIndex");
@@ -41,44 +43,44 @@ export default function Visa() {
     
     return (
         <ScrollView style={styles.MainContainer}>
-                <TouchableOpacity onPress={handleBack}>
-                    <Image source={require("@/assets/images/left-arrow.png")}
-                    style={styles.back}/>
-                </TouchableOpacity>
-                <View style={styles.MainContainer}>
-            <Text style={styles.MainTitle}>MasterCard Payment</Text>
-            <Text style={styles.amountText}>Amount: UGX {amount.toLocaleString()}</Text>
-
-            <TextInput
-                placeholder="Card Number"
-                value={cardNumber}
-                style={styles.Input}
-                onChangeText={setCardNumber}
-                keyboardType="numeric"
-                left={<TextInput.Icon icon="credit-card" />}
-            />
-
-            <TextInput
-                placeholder="MM/YY"
-                value={expiry}
-                style={styles.Input}
-                onChangeText={setExpiry}
-                left={<TextInput.Icon icon="calendar" />}
-            />
-
-            <TextInput
-                placeholder="CVV"
-                value={cvv}
-                style={styles.Input}
-                onChangeText={setCvv}
-                keyboardType="numeric"
-                secureTextEntry
-                left={<TextInput.Icon icon="lock" />}
-            />
-
-            <TouchableOpacity onPress={HandlePayment} style={styles.submit}>
-                <Text style={styles.Submit}>Pay with MasterCard</Text>
+            <TouchableOpacity onPress={handleBack}>
+                <Image source={require("@/assets/images/left-arrow.png")}
+                style={styles.back}/>
             </TouchableOpacity>
+            <View style={styles.MainContainer}>
+                <Text style={styles.MainTitle}>MasterCard Payment</Text>
+                <Text style={styles.amountText}>Amount: UGX {amount.toLocaleString()}</Text>
+
+                <TextInput
+                    placeholder="Card Number"
+                    value={cardNumber}
+                    style={styles.Input}
+                    onChangeText={setCardNumber}
+                    keyboardType="numeric"
+                    left={<TextInput.Icon icon="credit-card" />}
+                />
+
+                <TextInput
+                    placeholder="MM/YY"
+                    value={expiry}
+                    style={styles.Input}
+                    onChangeText={setExpiry}
+                    left={<TextInput.Icon icon="calendar" />}
+                />
+
+                <TextInput
+                    placeholder="CVV"
+                    value={cvv}
+                    style={styles.Input}
+                    onChangeText={setCvv}
+                    keyboardType="numeric"
+                    secureTextEntry
+                    left={<TextInput.Icon icon="lock" />}
+                />
+
+                <TouchableOpacity onPress={HandlePayment} style={styles.submit}>
+                    <Text style={styles.Submit}>Pay with MasterCard</Text>
+                </TouchableOpacity>
             </View>
         </ScrollView>
     );
@@ -100,7 +102,7 @@ const styles = StyleSheet.create({
     },
 
     back: {
-        width:moderateScale(20),
+        width: moderateScale(20),
         height: verticalScale(18),
         marginLeft: "10%"
     },

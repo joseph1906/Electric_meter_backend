@@ -15,15 +15,20 @@ export default function Airtel() {
     const calculateUnits = (amount: number) => amount / 1000;
     
     const HandlePayment = () => {
-        if (input && input.length === 10) {
-            const units = calculateUnits(amount);
-            setLastPayment({ method: "Airtel", amount: amount, units });
-            router.push("/BillingSystem/Printable");
-        } else {
-            alert("Please enter a Airtel valid number");
-        }
+    if (input && input.length === 10) {
+        const units = calculateUnits(amount);
+        // ✅ ADD phoneNumber to the payment data
+        setLastPayment({ 
+            method: "Airtel", 
+            amount: amount, 
+            units,
+            phoneNumber: input  // ← ADD THIS LINE
+        });
+        router.push("/BillingSystem/Printable");
+    } else {
+        alert("Please enter a valid Airtel number");
     }
-
+}
     const handleKeyPress = (value: string) => { 
         if (!/^\d$/.test(value) || input.length >= 9) return;
         setInput(input + value);

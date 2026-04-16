@@ -311,7 +311,7 @@ export default function RegistrationForm() {
         <Picker.Item label="Mityana" value="Mityana" />
         <Picker.Item label="Moroto" value="Moroto" />
         <Picker.Item label="Moyo" value="Moyo" />
-        <Picker.Item name="Mpigi" label="Mpigi" value="Mpigi" />
+        <Picker.Item label="Mpigi" value="Mpigi" />
         <Picker.Item label="Mubende" value="Mubende" />
         <Picker.Item label="Mukono" value="Mukono" />
         <Picker.Item label="Nabilatuk" value="Nabilatuk" />

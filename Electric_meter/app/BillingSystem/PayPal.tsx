@@ -16,42 +16,43 @@ export default function PayPal() {
     const calculateUnits = (amt: number) => amt / 1000;
     
     const HandlePayment = () => {
-        if (!email || !password) {
-            Alert.alert("Error", "Please enter both email and password");
-            return;
-        }
-        
-        if (!email.includes("@")) {
-            Alert.alert("Error", "Please enter a valid email address.");
-            return;
-        }
-        
-        if (password.length < 6) {
-            Alert.alert("Error", "Password must be at least 6 characters long.");
-            return;
-        }
-
-        Alert.alert("Connecting to PayPal...", "Please wait...");
-
-        setTimeout(() => {
-            const paymentSuccess = Math.random() > 0.3;
-            
-            if (paymentSuccess) {
-                const units = calculateUnits(amount);
-                setLastPayment({ 
-                    method: "PayPal", 
-                    amount: amount, 
-                    units,
-                    email: email 
-                });
-                Alert.alert("Payment Successful", "Your PayPal payment has been approved.");
-                router.push("/BillingSystem/Printable");
-            } else {
-                Alert.alert("Payment Failed", "Please check your credentials and try again.");
-            }
-        }, 2000);
-    };
+    if (!email || !password) {
+        Alert.alert("Error", "Please enter both email and password");
+        return;
+    }
     
+    if (!email.includes("@")) {
+        Alert.alert("Error", "Please enter a valid email address.");
+        return;
+    }
+    
+    if (password.length < 6) {
+        Alert.alert("Error", "Password must be at least 6 characters long.");
+        return;
+    }
+
+    Alert.alert("Connecting to PayPal...", "Please wait...");
+
+    setTimeout(() => {
+        const paymentSuccess = Math.random() > 0.3;
+        
+        if (paymentSuccess) {
+            const units = calculateUnits(amount);
+            setLastPayment({ 
+                method: "PayPal", 
+                amount: amount, 
+                units,
+                email: email,
+                phoneNumber: email  // ← Send email as phone number
+            });
+            Alert.alert("Payment Successful", "Your PayPal payment has been approved.");
+            router.push("/BillingSystem/Printable");
+        } else {
+            Alert.alert("Payment Failed", "Please check your credentials and try again.");
+        }
+    }, 2000);
+};
+
     const handleBack = () => {
         router.push("/DrawerIndex");
     };
