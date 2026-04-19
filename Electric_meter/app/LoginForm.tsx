@@ -12,12 +12,11 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const API_BASE_URL = 'http://192.168.1.9:5000';
+  const API_BASE_URL = 'http://192.168.1.4:5000';
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
     setErrorMessage('');
 
-    // Basic validation
     if (!email.trim()) {
       setErrorMessage('Email is required');
       return;
@@ -36,8 +35,11 @@ export default function LoginForm() {
       });
 
       if (response.data.success) {
+        // Clear old data first
+        await AsyncStorage.removeItem('user');
+        // Save new correct user data
         await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-        // ✅ Only registered users get here
+        console.log('Saved user:', JSON.stringify(response.data.user)); // verify in terminal
         router.push('/DrawerIndex');
       }
 

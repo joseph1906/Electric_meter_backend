@@ -1,15 +1,15 @@
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, RefreshControl, Alert, Platform } from 'react-native';
 import { getLoggedInUserId } from '../utils/storage';
 
 export default function HistoryPayment() {
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   
-  const API_BASE_URL = 'http://192.168.1.9:5000';
+  const API_BASE_URL = 'http://192.168.1.4:5000';
 
   useEffect(() => {
     fetchTransactionHistory();
@@ -51,41 +51,62 @@ export default function HistoryPayment() {
     fetchTransactionHistory();
   };
 
-  const handleDeleteTransaction = async (transactionId) => {
-    Alert.alert(
-      'Delete Transaction',
-      'Are you sure you want to permanently delete this transaction?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          onPress: async () => {
-            try {
-              console.log('Deleting transaction:', transactionId);
-              
-              const response = await fetch(`${API_BASE_URL}/api/delete-transaction/${transactionId}`, {
-                method: 'DELETE',
-              });
-              
-              const data = await response.json();
-              console.log('Delete response:', data);
-              
-              if (data.success) {
-                // Remove from local state
-                setTransactions(prev => prev.filter(t => t.TransactionID !== transactionId));
-                Alert.alert('Success', 'Transaction deleted successfully');
-              } else {
-                Alert.alert('Error', data.message || 'Failed to delete');
-              }
-            } catch (error) {
-              console.error('Delete error:', error);
-              Alert.alert('Error', 'Could not connect to server');
-            }
-          },
-          style: 'destructive'
+  const performDelete = async (transactionId: string) => {
+    try {
+      // ✅ Soft delete - just marks as deleted in database
+      const response = await fetch(`${API_BASE_URL}/api/soft-delete-transaction/${transactionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      console.log('Soft delete response:', data);
+
+      if (data.success) {
+        // ✅ Remove from screen immediately
+        setTransactions(prev => prev.filter((t: any) => t.TransactionID !== transactionId));
+      } else {
+        if (Platform.OS === 'web') {
+          window.alert('Failed to delete transaction');
+        } else {
+          Alert.alert('Error', 'Failed to delete transaction');
         }
-      ]
-    );
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      if (Platform.OS === 'web') {
+        window.alert('Could not connect to server');
+      } else {
+        Alert.alert('Error', 'Could not connect to server');
+      }
+    }
+  };
+
+  const handleDeleteTransaction = (transactionId: string) => {
+    if (Platform.OS === 'web') {
+      // ✅ Works on Windows browser
+      const confirmed = window.confirm('Are you sure you want to remove this transaction?');
+      if (confirmed) {
+        performDelete(transactionId);
+      }
+    } else {
+      // ✅ Works on Android & iOS
+      Alert.alert(
+        'Delete Transaction',
+        'Are you sure you want to remove this transaction from view?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            onPress: () => performDelete(transactionId),
+            style: 'destructive'
+          }
+        ]
+      );
+    }
   };
 
   if (loading) {
@@ -124,7 +145,7 @@ export default function HistoryPayment() {
   }
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
@@ -139,18 +160,18 @@ export default function HistoryPayment() {
             <Text style={styles.paymentMethod}>{transaction.Method}</Text>
             <Text style={styles.paymentAmount}>UGX {Number(transaction.Amount).toLocaleString()}</Text>
           </View>
-          
+
           <View style={styles.paymentDetails}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Units:</Text>
               <Text style={styles.detailValue}>{Number(transaction.Unit_purchase).toFixed(2)} units</Text>
             </View>
-            
+
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Transaction ID:</Text>
               <Text style={styles.detailValue}>{transaction.TransactionID}</Text>
             </View>
-            
+
             {transaction.Phone_number && transaction.Phone_number !== 'N/A' && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Phone/Card:</Text>
@@ -158,13 +179,13 @@ export default function HistoryPayment() {
               </View>
             )}
           </View>
-          
+
           <View style={styles.actionContainer}>
             <View style={styles.statusContainer}>
               <Text style={styles.statusText}>✅ Completed</Text>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.deleteButton}
               onPress={() => handleDeleteTransaction(transaction.TransactionID)}
             >
@@ -173,7 +194,7 @@ export default function HistoryPayment() {
           </View>
         </View>
       ))}
-      
+
       <TouchableOpacity style={styles.backButton} onPress={() => router.push('/DrawerIndex')}>
         <Text style={styles.backButtonText}>Back to Home</Text>
       </TouchableOpacity>

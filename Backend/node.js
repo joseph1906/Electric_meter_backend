@@ -7,7 +7,12 @@ require('dotenv').config();
 const app = express();
 const PORT = 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -59,6 +64,7 @@ db.connect((err) => {
         Method VARCHAR(255) NOT NULL,
         Amount DECIMAL(10,2) NOT NULL,
         Unit_purchase DECIMAL(10,2) NOT NULL,
+        deleted_by_user BOOLEAN DEFAULT FALSE,
         FOREIGN KEY (ID) REFERENCES Registration(ID) ON DELETE SET NULL
       )
     `;
@@ -136,34 +142,37 @@ app.post('/api/register', async (req, res) => {
 // SAVE TRANSACTION
 app.post('/api/record-transaction', (req, res) => {
   console.log('💰 TRANSACTION RECEIVED:', req.body);
-  
+
   const { userId, phoneNumber, method, amount, unitPurchase } = req.body;
-  
+
   if (!userId || !amount) {
     return res.status(400).json({ success: false, message: 'Missing required fields' });
   }
-  
+
   const transactionId = 'TXN' + Date.now() + Math.floor(Math.random() * 10000);
-  const insertQuery = `INSERT INTO PaymentMode (TransactionID, ID, Phone_number, Method, Amount, Unit_purchase) VALUES (?, ?, ?, ?, ?, ?)`;
-  
+  const insertQuery = `INSERT INTO PaymentMode (TransactionID, ID, Phone_number, Method, Amount, Unit_purchase, deleted_by_user) VALUES (?, ?, ?, ?, ?, ?, FALSE)`;
+
   db.query(insertQuery, [transactionId, userId, phoneNumber || null, method, amount, unitPurchase], (err, result) => {
     if (err) {
       console.error('❌ Insert error:', err);
       return res.status(500).json({ success: false, message: err.message });
     }
-    
+
     console.log('✅ Transaction saved! ID:', transactionId);
     res.json({ success: true, transactionId: transactionId });
   });
 });
 
-// GET TRANSACTIONS
+// GET TRANSACTIONS - Only shows non-deleted transactions to user
 app.get('/api/user-transactions/:userId', (req, res) => {
   const { userId } = req.params;
   console.log(`📋 Fetching transactions for user ID: ${userId}`);
-  
-  const query = `SELECT TransactionID, ID, Phone_number, Method, Amount, Unit_purchase FROM PaymentMode WHERE ID = ? ORDER BY TransactionID DESC`;
-  
+
+  const query = `SELECT TransactionID, ID, Phone_number, Method, Amount, Unit_purchase 
+                 FROM PaymentMode 
+                 WHERE ID = ? AND deleted_by_user = FALSE 
+                 ORDER BY TransactionID DESC`;
+
   db.query(query, [userId], (err, results) => {
     if (err) {
       console.error('❌ Error fetching transactions:', err);
@@ -174,39 +183,78 @@ app.get('/api/user-transactions/:userId', (req, res) => {
   });
 });
 
-// DELETE TRANSACTION - FIXED VERSION
-app.delete('/api/delete-transaction/:transactionId', (req, res) => {
+// SOFT DELETE - Hides transaction from user but keeps it for admin
+app.put('/api/soft-delete-transaction/:transactionId', (req, res) => {
   const { transactionId } = req.params;
-  
-  console.log('========================================');
-  console.log('🗑️ DELETE REQUEST RECEIVED!');
-  console.log('Transaction ID to delete:', transactionId);
-  console.log('========================================');
-  
-  if (!transactionId) {
+  const cleanId = transactionId?.trim();
+
+  console.log('🗑️ SOFT DELETE REQUEST FOR:', cleanId);
+
+  if (!cleanId) {
     return res.status(400).json({ success: false, message: 'Transaction ID required' });
   }
-  
-  const deleteQuery = 'DELETE FROM PaymentMode WHERE TransactionID = ?';
-  
-  db.query(deleteQuery, [transactionId], (err, result) => {
+
+  const updateQuery = 'UPDATE PaymentMode SET deleted_by_user = TRUE WHERE TransactionID = ?';
+
+  db.query(updateQuery, [cleanId], (err, result) => {
     if (err) {
-      console.error('❌ Delete error:', err);
-      return res.status(500).json({ success: false, message: 'Database error: ' + err.message });
+      console.error('❌ Soft delete error:', err);
+      return res.status(500).json({ success: false, message: err.message });
     }
-    
-    console.log('Rows affected:', result.affectedRows);
-    
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Transaction not found' });
     }
-    
-    console.log('✅ Successfully deleted transaction:', transactionId);
-    res.json({ success: true, message: 'Transaction deleted successfully' });
+
+    console.log('✅ Transaction soft deleted:', cleanId);
+    res.json({ success: true, message: 'Transaction hidden successfully' });
+  });
+});
+
+// ADMIN - Get ALL transactions including soft deleted ones
+app.get('/api/admin/all-transactions', (req, res) => {
+  console.log('👑 Admin fetching all transactions');
+
+  const query = `
+    SELECT 
+      p.TransactionID, 
+      p.ID, 
+      r.Firstname,
+      r.Lastname,
+      r.Email,
+      p.Phone_number, 
+      p.Method, 
+      p.Amount, 
+      p.Unit_purchase,
+      p.deleted_by_user
+    FROM PaymentMode p
+    LEFT JOIN Registration r ON p.ID = r.id
+    ORDER BY p.TransactionID DESC
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching all transactions:', err);
+      return res.status(500).json({ success: false, message: 'Database error' });
+    }
+
+    const total = results.reduce((sum, t) => sum + Number(t.Amount), 0);
+    const totalUnits = results.reduce((sum, t) => sum + Number(t.Unit_purchase), 0);
+
+    console.log(`✅ Admin found ${results.length} total transactions`);
+    res.json({
+      success: true,
+      transactions: results,
+      summary: {
+        totalTransactions: results.length,
+        totalAmount: total,
+        totalUnits: totalUnits,
+      }
+    });
   });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n✅ Server running on http://192.168.1.9:${PORT}`);
+  console.log(`\n✅ Server running on http://192.168.1.4:${PORT}`);
   console.log('========================================\n');
 });
