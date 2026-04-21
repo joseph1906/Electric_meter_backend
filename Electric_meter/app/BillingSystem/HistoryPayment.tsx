@@ -9,7 +9,7 @@ export default function HistoryPayment() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   
-  const API_BASE_URL = 'http://192.168.1.4:5000';
+  const API_BASE_URL = 'http://192.168.1.3:5000';
 
   useEffect(() => {
     fetchTransactionHistory();

@@ -3,25 +3,18 @@ import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
 import React, { useState, useRef } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+  ActivityIndicator, Alert, Image, ScrollView,
+  StyleSheet, Switch, Text, TextInput,
+  TouchableOpacity, View
 } from 'react-native';
 import axios from 'axios';
 
 export default function RegistrationForm() {
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(''); // ✅ Inline error state
+  const [errorMessage, setErrorMessage] = useState('');
   const isSubmitting = useRef(false);
 
-  const API_BASE_URL = 'http://192.168.1.9:5000';
+  const API_BASE_URL = 'http://192.168.1.3:5000';
 
   const [form, setForm] = useState({
     Firstname: '',
@@ -38,7 +31,7 @@ export default function RegistrationForm() {
   });
 
   const handleChange = (name: string, value: any) => {
-    setErrorMessage(''); // ✅ Clear error when user types
+    setErrorMessage('');
     setForm({ ...form, [name]: value });
   };
 
@@ -67,7 +60,7 @@ export default function RegistrationForm() {
   const handleSubmit = async () => {
     if (isSubmitting.current) return;
     isSubmitting.current = true;
-    setErrorMessage(''); // ✅ Clear previous errors
+    setErrorMessage('');
 
     if (!validateForm()) {
       isSubmitting.current = false;
@@ -92,15 +85,13 @@ export default function RegistrationForm() {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/register`, submitData);
 
-      console.log('✅ Response:', response.data);
-
       if (response.data.success) {
         setErrorMessage('');
-        Alert.alert(
-          'Success',
-          'Registration completed successfully!\n\nYou can now login with your credentials.',
-          [{ text: 'Login Now', onPress: () => router.push('/LoginForm') }]
-        );
+        // ✅ Navigate to OTP screen with email
+        router.push({
+          pathname: '/OTPVerification',
+          params: { email: form.Email.trim().toLowerCase() }
+        });
         setForm({
           Firstname: '', Lastname: '', NationalId: '', Telephone: '',
           Email: '', Password: '', ConfirmPassword: '', District: '',
@@ -109,13 +100,7 @@ export default function RegistrationForm() {
       }
 
     } catch (error: any) {
-      console.log('❌ Error status:', error.response?.status);
-      console.log('❌ Error data:', JSON.stringify(error.response?.data));
-      console.log('❌ Error message:', error.message);
-
-      // ✅ Show error both inline AND as Alert for maximum visibility
       let msg = 'An unexpected error occurred';
-
       if (error.response && error.response.data) {
         msg = error.response.data.message || `Server error (${error.response.status})`;
       } else if (error.request) {
@@ -123,9 +108,8 @@ export default function RegistrationForm() {
       } else {
         msg = error.message || msg;
       }
-
-      setErrorMessage(msg);        // ✅ Shows on screen inline
-      Alert.alert('Error', msg);   // ✅ Also shows as popup
+      setErrorMessage(msg);
+      Alert.alert('Error', msg);
     } finally {
       setLoading(false);
       isSubmitting.current = false;
@@ -142,7 +126,6 @@ export default function RegistrationForm() {
         <Text style={styles.title}>Customer Registration</Text>
       </View>
 
-      {/* ✅ Inline error box — always visible on screen */}
       {errorMessage !== '' && (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>⚠️ {errorMessage}</Text>
@@ -150,64 +133,45 @@ export default function RegistrationForm() {
       )}
 
       <TextInput
-        placeholder="First Name *"
-        placeholderTextColor="#999"
-        style={styles.input}
-        value={form.Firstname}
+        placeholder="First Name *" placeholderTextColor="#999"
+        style={styles.input} value={form.Firstname}
         onChangeText={(text) => handleChange('Firstname', text)}
       />
       <TextInput
-        placeholder="Last Name *"
-        placeholderTextColor="#999"
-        style={styles.input}
-        value={form.Lastname}
+        placeholder="Last Name *" placeholderTextColor="#999"
+        style={styles.input} value={form.Lastname}
         onChangeText={(text) => handleChange('Lastname', text)}
       />
       <TextInput
-        placeholder="National ID / Passport Number"
-        placeholderTextColor="#999"
-        style={styles.input}
-        value={form.NationalId}
+        placeholder="National ID / Passport Number" placeholderTextColor="#999"
+        style={styles.input} value={form.NationalId}
         onChangeText={(text) => handleChange('NationalId', text)}
       />
       <TextInput
-        placeholder="Phone Number *"
-        placeholderTextColor="#999"
-        style={styles.input}
-        value={form.Telephone}
+        placeholder="Phone Number *" placeholderTextColor="#999"
+        style={styles.input} value={form.Telephone}
         keyboardType="phone-pad"
         onChangeText={(text) => handleChange('Telephone', text)}
       />
       <TextInput
-        placeholder="Email Address *"
-        placeholderTextColor="#999"
-        style={styles.input}
-        value={form.Email}
-        keyboardType="email-address"
-        autoCapitalize="none"
+        placeholder="Email Address *" placeholderTextColor="#999"
+        style={styles.input} value={form.Email}
+        keyboardType="email-address" autoCapitalize="none"
         onChangeText={(text) => handleChange('Email', text)}
       />
       <TextInput
-        placeholder="Password * (min 6 characters)"
-        placeholderTextColor="#999"
-        style={styles.input}
-        secureTextEntry
-        value={form.Password}
+        placeholder="Password * (min 6 characters)" placeholderTextColor="#999"
+        style={styles.input} secureTextEntry value={form.Password}
         onChangeText={(text) => handleChange('Password', text)}
       />
       <TextInput
-        placeholder="Confirm Password *"
-        placeholderTextColor="#999"
-        style={styles.input}
-        secureTextEntry
-        value={form.ConfirmPassword}
+        placeholder="Confirm Password *" placeholderTextColor="#999"
+        style={styles.input} secureTextEntry value={form.ConfirmPassword}
         onChangeText={(text) => handleChange('ConfirmPassword', text)}
       />
       <TextInput
-        placeholder="Meter Number"
-        placeholderTextColor="#999"
-        style={styles.input}
-        value={form.MeterNumber}
+        placeholder="Meter Number" placeholderTextColor="#999"
+        style={styles.input} value={form.MeterNumber}
         onChangeText={(text) => handleChange('MeterNumber', text)}
       />
 
@@ -386,85 +350,17 @@ export default function RegistrationForm() {
 }
 
 const styles = StyleSheet.create({
-  MainContainer: {
-    padding: 40,
-    backgroundColor: '#1B1A31',
-  },
-  container: {
-    alignContent: "center",
-    justifyContent: "center",
-  },
-  title: {
-    textAlign: "center",
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: "#d9d9d9",
-    marginTop: 10,
-    fontStyle: "italic",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: "#fff",
-    padding: 10,
-    marginBottom: 10,
-    color: "#000",
-    borderRadius: 5,
-    fontSize: 15,
-  },
-  picker: {
-    borderWidth: 1,
-    borderColor: '#CCC',
-    backgroundColor: "#fff",
-    width: "100%",
-    height: 50,
-    marginBottom: 10,
-    borderRadius: 5,
-    color: "#000",
-  },
-  label: {
-    fontSize: 15,
-    marginVertical: 5,
-    marginBottom: 10,
-    marginLeft: 10,
-    color: "#d9d9d9"
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  submitBtn: {
-    backgroundColor: '#484763',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginBottom: 20
-  },
-  disabledBtn: {
-    opacity: 0.7,
-  },
-  submitText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 20,
-  },
-  Imgcontainer: {
-    width: moderateScale(14),
-    height: verticalScale(18),
-  },
-  // ✅ New error box style
-  errorBox: {
-    backgroundColor: '#ff4444',
-    padding: 12,
-    borderRadius: 5,
-    marginBottom: 15,
-  },
-  errorText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
+  MainContainer: { padding: 40, backgroundColor: '#1B1A31' },
+  container: { alignContent: "center", justifyContent: "center" },
+  title: { textAlign: "center", fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: "#d9d9d9", marginTop: 10, fontStyle: "italic" },
+  input: { borderWidth: 1, borderColor: '#ccc', backgroundColor: "#fff", padding: 10, marginBottom: 10, color: "#000", borderRadius: 5, fontSize: 15 },
+  picker: { borderWidth: 1, borderColor: '#CCC', backgroundColor: "#fff", width: "100%", height: 50, marginBottom: 10, borderRadius: 5, color: "#000" },
+  label: { fontSize: 15, marginVertical: 5, marginBottom: 10, marginLeft: 10, color: "#d9d9d9" },
+  checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  submitBtn: { backgroundColor: '#484763', padding: 15, borderRadius: 5, alignItems: 'center', marginBottom: 20 },
+  disabledBtn: { opacity: 0.7 },
+  submitText: { color: '#fff', fontWeight: 'bold', fontSize: 20 },
+  Imgcontainer: { width: moderateScale(14), height: verticalScale(18) },
+  errorBox: { backgroundColor: '#ff4444', padding: 12, borderRadius: 5, marginBottom: 15 },
+  errorText: { color: '#fff', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
 });

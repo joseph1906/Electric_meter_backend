@@ -10,7 +10,7 @@ export default function PrintPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   
-  const API_BASE_URL = 'http://192.168.1.9:5000';
+  const API_BASE_URL = 'http://192.168.1.3:5000';
 
   useEffect(() => {
     const saveTransactionToDatabase = async () => {

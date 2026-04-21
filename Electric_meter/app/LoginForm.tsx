@@ -12,7 +12,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const API_BASE_URL = 'http://192.168.1.4:5000';
+  const API_BASE_URL = 'http://192.168.1.3:5000';
 
 const handleSubmit = async () => {
     setErrorMessage('');
@@ -85,9 +85,17 @@ const handleSubmit = async () => {
         secureTextEntry
       />
 
-      <TouchableOpacity onPress={() => router.push('/RegistrationForm')}>
-        <Text style={styles.Text}>Don't have an account? Register now</Text>
-      </TouchableOpacity>
+      {/* Row container for Register and Forgot Password buttons */}
+      {/* Grouped container for Register and Forgot Password */}
+<View style={styles.linksContainer}>
+  <TouchableOpacity onPress={() => router.push('/RegistrationForm')}>
+    <Text style={styles.registerText}>Don't have an account? Register now</Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity onPress={() => router.push('/ForgotPassword')}>
+    <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+  </TouchableOpacity>
+</View>
 
       <TouchableOpacity
         onPress={handleSubmit}
@@ -118,9 +126,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#1B1A31"
   },
-  Text: {
+  registerText: {
     color: "#1B1A31",
-    fontSize: 17,
+    fontSize: 15,
+    fontWeight: "bold"
+  },
+  forgotPasswordText: {
+    color: "#1B1A31",
+    fontSize: 15,
     fontWeight: "bold"
   },
   input: {
@@ -155,4 +168,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  linksContainer: {
+  alignItems: 'center',  // Centers both vertically
+  marginTop: 10,
+  marginBottom: 10,
+  gap: 8,  // Adds space between them
+},
+registerText: {
+  color: "#1B1A31",
+  fontSize: 15,
+  fontWeight: "bold",
+},
+forgotPasswordText: {
+  color: "#1B1A31",
+  fontSize: 14,
+  fontWeight: "600",
+},
 });
