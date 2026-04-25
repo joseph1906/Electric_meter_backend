@@ -14,7 +14,7 @@ export default function RegistrationForm() {
   const [errorMessage, setErrorMessage] = useState('');
   const isSubmitting = useRef(false);
 
-  const API_BASE_URL = 'http://192.168.1.3:5000';
+  const API_BASE_URL = 'http://192.168.1.2:5000';
 
   const [form, setForm] = useState({
     Firstname: '',

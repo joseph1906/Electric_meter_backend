@@ -22,12 +22,9 @@ export default function Dashboard() {
   return (
     <ScrollView style={styles.MainContainer}>
       <View style={styles.MainContainer}>
-
-        {/* ✅ Shows logged-in user's name */}
         <Text style={styles.TextEntry}>
           Welcome, {user ? `${user.Firstname} ${user.Lastname}` : 'Guest'}!
         </Text>
-
         <View style={styles.backText}>
           <Text style={styles.MeterText}>.00</Text>
         </View>
@@ -41,6 +38,7 @@ export default function Dashboard() {
 
 const styles = StyleSheet.create({
   MainContainer: {
+    flex: 1,
     backgroundColor: "#1B1A31",
   },
   TextEntry: {

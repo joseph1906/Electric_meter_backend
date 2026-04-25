@@ -14,19 +14,19 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.options('*', cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 console.log('🚀 Starting server...');
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  port: 465,
+  secure: true,
   requireTLS: true,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.Email_user,
+    pass: process.env.Email_pass,
   },
   tls: {
     rejectUnauthorized: false
@@ -43,11 +43,13 @@ transporter.verify((error) => {
 });
 
 const db = mysql.createConnection({
-  host: process.env.DatabaseHost,
-  user: process.env.DatabaseUser,
-  password: process.env.DatabasePassword,
-  database: process.env.DatabaseName,
-  port: process.env.DatabasePort
+  host: process.env.PUBLIC_NETWORKING,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: parseInt(process.env.PUBLIC_NETWORKING_PORT),  // ← parseInt!
+  connectTimeout: 30000,
+  ssl: { rejectUnauthorized: false }
 });
 
 db.connect((err) => {
@@ -138,16 +140,20 @@ app.post('/api/login', async (req, res) => {
     const passwordMatch = await bcrypt.compare(Password, user.Password);
     if (!passwordMatch) return res.status(401).json({ success: false, message: 'Invalid email or password' });
 
-    res.json({
-      success: true,
-      user: {
-        id: user.id,
-        Firstname: user.Firstname,
-        Lastname: user.Lastname,
-        Email: user.Email,
-        Telephone: user.Telephone,
-      }
-    });
+    // LOGIN - Find this in server.js and replace the res.json part
+res.json({
+  success: true,
+  user: {
+    id: user.id,
+    Firstname: user.Firstname,
+    Lastname: user.Lastname,
+    Email: user.Email,
+    Telephone: user.Telephone,
+    District: user.District,       // ← ADD THIS
+    MeterNumber: user.MeterNumber, // ← ADD THIS
+    PhaseType: user.PhaseType,     // ← ADD THIS
+     }
+   });
   });
 });
 
@@ -575,8 +581,47 @@ app.post('/api/reset-password', async (req, res) => {
   });
 });
 
+// SAVE PROFILE IMAGE
+app.post('/api/upload-profile-image', (req, res) => {
+  const { userId, imageBase64 } = req.body;
+
+  if (!userId || !imageBase64) {
+    return res.status(400).json({ success: false, message: 'Missing data' });
+  }
+
+  db.query(
+    'UPDATE Registration SET ProfileImage = ? WHERE id = ?',
+    [imageBase64, userId],
+    (err) => {
+      if (err) {
+        console.error('❌ Profile image save error:', err);
+        return res.status(500).json({ success: false, message: 'DB error' });
+      }
+      console.log('✅ Profile image saved for user:', userId);
+      res.json({ success: true, message: 'Profile image saved!' });
+    }
+  );
+});
+
+// GET PROFILE IMAGE
+app.get('/api/get-profile-image/:userId', (req, res) => {
+  db.query(
+    'SELECT ProfileImage FROM Registration WHERE id = ?',
+    [req.params.userId],
+    (err, results) => {
+      if (err) {
+        console.error('❌ Profile image fetch error:', err);
+        return res.status(500).json({ success: false });
+      }
+      res.json({ 
+        success: true, 
+        image: results[0]?.ProfileImage || null 
+      });
+    }
+  );
+});
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n✅ Server running on http://192.168.1.3:${PORT}`);
+  console.log(`\n✅ Server running on http://192.168.1.2:${PORT}`);
   console.log('========================================\n');
 });

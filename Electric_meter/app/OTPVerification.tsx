@@ -16,7 +16,7 @@ export default function OTPVerification() {
   const [countdown, setCountdown] = useState(600); // 10 minutes
   const inputs = useRef<TextInput[]>([]);
 
-  const API_BASE_URL = 'http://192.168.1.3:5000';
+  const API_BASE_URL = 'http://192.168.1.2:5000';
 
   // Countdown timer
   useEffect(() => {
