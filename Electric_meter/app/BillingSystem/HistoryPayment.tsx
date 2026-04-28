@@ -8,8 +8,7 @@ export default function HistoryPayment() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  
-  const API_BASE_URL = 'http://192.168.1.2:5000';
+  const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
   useEffect(() => {
     fetchTransactionHistory();
@@ -121,7 +120,7 @@ export default function HistoryPayment() {
         <View key={transaction.TransactionID} style={styles.paymentCard}>
           <View style={styles.paymentHeader}>
             <Text style={styles.paymentMethod}>{transaction.Method}</Text>
-            <Text style={styles.paymentAmount}>UGX {Number(transaction.Amount).toLocaleString()}</Text>
+            <Text style={styles.paymentAmount}>USD {Number(transaction.Amount).toLocaleString()}</Text>
           </View>
           <View style={styles.paymentDetails}>
             <View style={styles.detailRow}>

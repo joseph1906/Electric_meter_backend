@@ -1,19 +1,17 @@
-import colors from '@/assets/styling/colors';
-import { moderateScale, scale, verticalScale } from '@/assets/styling/scaling';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as FileSystem from 'expo-file-system';
-import { EncodingType } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator, Alert, FlatList, Image, ScrollView,
-  StyleSheet, Text, TouchableOpacity, View
+  ActivityIndicator, Alert, Image, SafeAreaView,
+  ScrollView, StyleSheet, Text, TouchableOpacity, View
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-const API_URL = 'http://192.168.1.2:5000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function Profile() {
+  const router = useRouter();
   const [user, setUser] = useState<{
     id: number;
     Firstname: string;
@@ -27,7 +25,7 @@ export default function Profile() {
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [imageKey, setImageKey] = useState(0); // ✅ Forces image re-render
+  const [imageKey, setImageKey] = useState(0);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -36,28 +34,16 @@ export default function Profile() {
         if (stored) {
           const parsedUser = JSON.parse(stored);
           setUser(parsedUser);
-
-          // Try loading from DB first
           try {
-            const response = await fetch(
-              `${API_URL}/api/get-profile-image/${parsedUser.id}`
-            );
+            const response = await fetch(`${API_URL}/api/get-profile-image/${parsedUser.id}`);
             const data = await response.json();
-
             if (data.success && data.image) {
-              // ✅ Store base64 directly in state — no file system needed
               setProfileImage(data.image);
-              console.log('✅ Image loaded from DB');
             } else {
-              // Fallback: load from AsyncStorage
               const saved = await AsyncStorage.getItem('profileImage');
-              if (saved) {
-                setProfileImage(saved);
-                console.log('✅ Image loaded from AsyncStorage');
-              }
+              if (saved) setProfileImage(saved);
             }
-          } catch (fetchError) {
-            console.log('DB fetch failed:', fetchError);
+          } catch {
             const saved = await AsyncStorage.getItem('profileImage');
             if (saved) setProfileImage(saved);
           }
@@ -69,265 +55,326 @@ export default function Profile() {
     loadUser();
   }, []);
 
-const pickImage = async () => {
-  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (status !== 'granted') {
-    Alert.alert('Permission Required', 'Please allow gallery access.');
-    return;
-  }
-
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.2,
-  });
-
-  console.log('🖼️ Picker result canceled:', result.canceled);
-
-  if (!result.canceled) {
-    const uri = result.assets[0].uri;
-    console.log('🖼️ Image URI:', uri);
-    setUploading(true);
-
-    try {
-      const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: EncodingType.Base64,
-      });
-
-      console.log('📦 Base64 length:', base64.length);
-
-      if (!base64 || base64.length < 100) {
-        Alert.alert('Error', 'Could not read image.');
-        setUploading(false);
-        return;
-      }
-
-      const imageBase64 = `data:image/jpeg;base64,${base64}`;
-      console.log('✅ imageBase64 ready, length:', imageBase64.length);
-
-      // ✅ Update state FIRST — show image immediately
-      setProfileImage(imageBase64);
-      setImageKey(prev => prev + 1);
-      console.log('✅ State updated — image should show now');
-
-      // ✅ Save to AsyncStorage
-      await AsyncStorage.setItem('profileImage', imageBase64);
-      console.log('✅ Saved to AsyncStorage');
-
-      // ✅ Upload to backend
-      const storedUser = await AsyncStorage.getItem('user');
-      const parsedUser = storedUser ? JSON.parse(storedUser) : null;
-      console.log('👤 User ID for upload:', parsedUser?.id);
-
-      if (parsedUser?.id) {
-        const response = await fetch(`${API_URL}/api/upload-profile-image`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: parsedUser.id,
-            imageBase64: imageBase64,
-          }),
-        });
-
-        const data = await response.json();
-        console.log('🗄️ DB upload result:', data.success, data.message);
-
-        if (data.success) {
-          Alert.alert('Success', 'Profile picture updated!');
-        } else {
-          Alert.alert('Saved locally', 'Image shown but DB save failed: ' + data.message);
-        }
-      }
-    } catch (error: any) {
-      console.log('❌ Full error:', JSON.stringify(error));
-      Alert.alert('Error details', error?.message || 'Unknown error');
-    } finally {
-      setUploading(false);
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Please allow gallery access.');
+      return;
     }
-  }
-};
 
-  const Data = [
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.2,
+    });
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setUploading(true);
+      try {
+        const base64 = await FileSystem.readAsStringAsync(uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        if (!base64 || base64.length < 100) {
+          Alert.alert('Error', 'Could not read image.');
+          return;
+        }
+        const imageBase64 = `data:image/jpeg;base64,${base64}`;
+        setProfileImage(imageBase64);
+        setImageKey(prev => prev + 1);
+        await AsyncStorage.setItem('profileImage', imageBase64);
+
+        const storedUser = await AsyncStorage.getItem('user');
+        const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+        if (parsedUser?.id) {
+          const response = await fetch(`${API_URL}/api/upload-profile-image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: parsedUser.id, imageBase64 }),
+          });
+          const data = await response.json();
+          if (data.success) Alert.alert('Success', 'Profile picture updated!');
+        }
+      } catch (error: any) {
+        Alert.alert('Error', error?.message || 'Failed to save image.');
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
+  const rows = [
     {
       id: 1,
-      iconLeft: require("../assets/styling/MeterNumber.jpg"),
-      label: `Meter: ${user?.MeterNumber || 'N/A'}`,
-      next: require("../assets/styling/arrow.png")
+      label: 'Meter number',
+      value: user?.MeterNumber || 'N/A',
+      color: '#EEEDFE',
+      iconColor: '#534AB7',
+      icon: (
+        <View style={[styles.iconBox, { backgroundColor: '#EEEDFE' }]}>
+          <Text style={[styles.iconEmoji, { color: '#534AB7' }]}>⚡</Text>
+        </View>
+      ),
     },
     {
       id: 2,
-      iconLeft: require("../assets/styling/location.png"),
-      label: `District: ${user?.District || 'N/A'}`,
-      next: require("../assets/styling/arrow.png")
+      label: 'District',
+      value: user?.District || 'N/A',
+      color: '#E1F5EE',
+      iconColor: '#0F6E56',
+      icon: (
+        <View style={[styles.iconBox, { backgroundColor: '#E1F5EE' }]}>
+          <Text style={[styles.iconEmoji, { color: '#0F6E56' }]}>📍</Text>
+        </View>
+      ),
     },
     {
       id: 3,
-      iconLeft: require("../assets/styling/compliant.png"),
-      label: `Phase: ${user?.PhaseType || 'N/A'}`,
-      next: require("../assets/styling/arrow.png")
+      label: 'Phase type',
+      value: user?.PhaseType || 'N/A',
+      color: '#FAEEDA',
+      iconColor: '#854F0B',
+      icon: (
+        <View style={[styles.iconBox, { backgroundColor: '#FAEEDA' }]}>
+          <Text style={[styles.iconEmoji, { color: '#854F0B' }]}>🔌</Text>
+        </View>
+      ),
     },
     {
       id: 4,
-      iconLeft: require("../assets/styling/out.png"),
-      label: `Phone: ${user?.Telephone || 'N/A'}`,
-      next: require("../assets/styling/arrow.png")
+      label: 'Phone',
+      value: user?.Telephone || 'N/A',
+      color: '#E6F1FB',
+      iconColor: '#185FA5',
+      icon: (
+        <View style={[styles.iconBox, { backgroundColor: '#E6F1FB' }]}>
+          <Text style={[styles.iconEmoji, { color: '#185FA5' }]}>📞</Text>
+        </View>
+      ),
     },
   ];
 
-  const SIZE = moderateScale(130);
-  const SIZE_TWO = moderateScale(150);
-  const SIZE_THREE = moderateScale(170);
+  const initials = user
+    ? `${user.Firstname[0]}${user.Lastname[0]}`.toUpperCase()
+    : '?';
 
   return (
-    <ScrollView>
-      <SafeAreaView style={styles.mainContainer}>
-        <View style={[styles.mainContainer, { paddingHorizontal: moderateScale(20) }]}>
+    <SafeAreaView style={styles.root}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-          <TouchableOpacity onPress={() => Alert.alert("working")}>
-            <Image
-              source={require("../assets/images/left-arrow.png")}
-              style={styles.Imgcontainer}
-            />
+        {/* Dark header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn}>
           </TouchableOpacity>
+          <View style={{ width: 36 }} />
+        </View>
 
-          <Text style={styles.profileText}>Profile</Text>
-
-          <View style={{ alignItems: "center", marginTop: moderateScale(20) }}>
-
-            <View style={{ position: 'relative' }}>
-
-              {/* Outer ring */}
-              <View style={{
-                height: SIZE_THREE,
-                width: SIZE_THREE,
-                borderRadius: SIZE_THREE / 2,
-                borderWidth: 1,
-                borderColor: colors.roundColor,
-                alignItems: "center",
-                justifyContent: "center",
-              }}>
-                {/* Middle ring */}
-                <View style={{
-                  height: SIZE_TWO,
-                  width: SIZE_TWO,
-                  borderRadius: SIZE_TWO / 2,
-                  borderWidth: 1,
-                  borderColor: colors.roundColor,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}>
-                  {/* Innermost circle with image */}
-<View style={{
-  height: SIZE,
-  width: SIZE,
-  borderRadius: SIZE / 2,
-  overflow: 'hidden',
-  backgroundColor: colors.BackgroundColor,
-  alignItems: 'center',      // ← ADD
-  justifyContent: 'center',  // ← ADD
-}}>
-  {uploading ? (
-    <ActivityIndicator size="large" color={colors.roundColor} />
-  ) : (
-    <Image
-  key={imageKey}
-  style={{ height: SIZE, width: SIZE, borderRadius: SIZE / 2 }}
-  source={
-    profileImage
-      ? { uri: profileImage }
-      : require("../assets/image.png")
-  }
-  onLoad={() => console.log('✅ Image rendered successfully')}
-  onError={(e) => console.log('❌ Image render error:', e.nativeEvent.error)}
-  resizeMode="cover"
-/>
-  )}
-</View>                
-</View>
+        {/* Avatar — overlaps header */}
+        <View style={styles.avatarSection}>
+          <View style={styles.avatarWrap}>
+            {uploading ? (
+              <View style={styles.avatar}>
+                <ActivityIndicator size="large" color="#fff" />
               </View>
-
-              {/* Camera button */}
-              <TouchableOpacity
-                onPress={pickImage}
-                disabled={uploading}
-                style={{
-                  position: 'absolute',
-                  bottom: moderateScale(8),
-                  right: moderateScale(8),
-                  backgroundColor: colors.BackgroundColor,
-                  borderRadius: 100,
-                  padding: moderateScale(7),
-                  borderWidth: 1,
-                  borderColor: colors.roundColor,
-                  zIndex: 10,
-                }}>
-                <Text style={{ fontSize: moderateScale(16) }}>📷</Text>
-              </TouchableOpacity>
-              
-
-            </View>
-
-            {/* Name and Email */}
-            <View style={{ alignItems: 'center', marginTop: moderateScale(10) }}>
-              <Text style={styles.userNameText}>
-                {user ? `${user.Firstname} ${user.Lastname}` : 'Loading...'}
-              </Text>
-              <Text style={styles.userNumber}>
-                {user ? user.Email : ''}
-              </Text>
-            </View>
-          </View>
-
-          {/* Info List */}
-          <FlatList
-            keyExtractor={(item) => item.id.toString()}
-            data={Data}
-            contentContainerStyle={{
-              marginTop: moderateScale(40),
-              paddingBottom: moderateScale(20),
-              justifyContent: "center",
-              marginLeft: "20%"
-            }}
-            ItemSeparatorComponent={() => <View style={{ height: moderateScale(20) }} />}
-            renderItem={({ item }) => (
-              <View style={{ flexDirection: "row", alignItems: 'center' }}>
-                <View style={{
-                  borderRadius: 100,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: moderateScale(32),
-                  width: moderateScale(32),
-                  backgroundColor: colors.BackgroundColor
-                }}>
-                  <Image
-                    style={{ height: moderateScale(16), width: moderateScale(16) }}
-                    source={item.iconLeft}
-                  />
-                </View>
-                <View style={{ width: '55%', marginHorizontal: moderateScale(10) }}>
-                  <Text>{item.label}</Text>
-                </View>
-                <View style={{ width: '20%' }}>
-                  <Image
-                    style={{ width: moderateScale(12), height: moderateScale(12) }}
-                    source={item.next}
-                  />
-                </View>
+            ) : profileImage ? (
+              <Image
+                key={imageKey}
+                source={{ uri: profileImage }}
+                style={styles.avatar}
+              />
+            ) : (
+              <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                <Text style={styles.avatarInitials}>{initials}</Text>
               </View>
             )}
-          />
 
+            {/* Camera button */}
+            <TouchableOpacity
+              onPress={pickImage}
+              disabled={uploading}
+              style={styles.cameraBtn}
+            >
+              <Text style={{ fontSize: 13 }}>📷</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.userName}>
+            {user ? `${user.Firstname} ${user.Lastname}` : 'Loading...'}
+          </Text>
+          <Text style={styles.userEmail}>{user?.Email || ''}</Text>
         </View>
-      </SafeAreaView>
-    </ScrollView>
+
+        {/* Info card */}
+        <View style={styles.card}>
+          {rows.map((item, index) => (
+            <View key={item.id}>
+              <View style={styles.row}>
+                {item.icon}
+                <View style={styles.rowText}>
+                  <Text style={styles.rowLabel}>{item.label}</Text>
+                  <Text style={styles.rowValue}>{item.value}</Text>
+                </View>
+                <Text style={styles.rowChevron}>›</Text>
+              </View>
+              {index < rows.length - 1 && <View style={styles.separator} />}
+            </View>
+          ))}
+        </View>
+
+        {/* Edit button */}
+        <TouchableOpacity style={styles.editBtn} activeOpacity={0.85}>
+          <Text style={styles.editBtnText}>Edit profile</Text>
+        </TouchableOpacity>
+
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  mainContainer:  { flex: 1 },
-  Imgcontainer:   { width: moderateScale(12), height: moderateScale(12) },
-  profileText:    { fontWeight: "bold", fontStyle: "italic", fontSize: moderateScale(16), textAlign: "center", marginTop: moderateScale(12) },
-  userNameText:   { fontSize: moderateScale(14), color: '#000000', textAlign: 'center', marginTop: moderateScale(16) },
-  userNumber:     { fontSize: moderateScale(12), color: '#000000', textAlign: 'center', marginTop: moderateScale(4) },
+  root: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
+  },
+  scroll: {
+    paddingBottom: 40,
+  },
+
+  // Header
+  header: {
+    backgroundColor: '#1B1A31',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 56,
+  },
+  backArrow: {
+    color: '#fff',
+    fontSize: 26,
+    lineHeight: 30,
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  // Avatar
+  avatarSection: {
+    alignItems: 'center',
+    marginTop: -44,
+    marginBottom: 20,
+  },
+  avatarWrap: {
+    position: 'relative',
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  avatarPlaceholder: {
+    backgroundColor: '#484763',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitials: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  cameraBtn: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#1B1A31',
+    borderWidth: 2,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1B1A31',
+    marginBottom: 2,
+  },
+  userEmail: {
+    fontSize: 13,
+    color: '#6b7280',
+  },
+
+  // Info card
+  card: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 0.5,
+    borderColor: '#e5e7eb',
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  iconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  iconEmoji: {
+    fontSize: 15,
+  },
+  rowText: {
+    flex: 1,
+  },
+  rowLabel: {
+    fontSize: 11,
+    color: '#9ca3af',
+    marginBottom: 1,
+  },
+  rowValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#111827',
+  },
+  rowChevron: {
+    fontSize: 20,
+    color: '#d1d5db',
+    lineHeight: 22,
+  },
+  separator: {
+    height: 0.5,
+    backgroundColor: '#f3f4f6',
+    marginLeft: 64,
+  },
+
+  // Edit button
+  editBtn: {
+    backgroundColor: '#1B1A31',
+    marginHorizontal: 16,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  editBtnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
 });

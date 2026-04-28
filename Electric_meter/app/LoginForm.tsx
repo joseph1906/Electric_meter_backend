@@ -1,8 +1,10 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
-import { TextInput } from 'react-native-paper';
-import axios from 'axios';
+import {
+  StyleSheet, Text, TouchableOpacity, View,
+  ActivityIndicator, TextInput, KeyboardAvoidingView,
+  Platform, ScrollView
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginForm() {
@@ -11,47 +13,52 @@ export default function LoginForm() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-  const API_BASE_URL = 'http://192.168.1.2:5000';
+  const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-const handleSubmit = async () => {
+  const handleSubmit = async () => {
     setErrorMessage('');
 
-    if (!email.trim()) {
-      setErrorMessage('Email is required');
-      return;
-    }
-    if (!password) {
-      setErrorMessage('Password is required');
-      return;
-    }
+    if (!email.trim()) { setErrorMessage('Email is required'); return; }
+    if (!password) { setErrorMessage('Password is required'); return; }
 
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/login`, {
-        Email: email.trim().toLowerCase(),
-        Password: password,
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Email: email.trim(), Password: password }),
       });
 
-      if (response.data.success) {
-        // Clear old data first
+      if (!response.ok && response.status !== 401) {
+        setErrorMessage(`Server error: ${response.status}`);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
         await AsyncStorage.removeItem('user');
-        // Save new correct user data
-        await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-        console.log('Saved user:', JSON.stringify(response.data.user)); // verify in terminal
-        router.push('/DrawerIndex');
+        await AsyncStorage.setItem('user', JSON.stringify(data.user));
+        router.replace('/DrawerIndex');
+
+      } else if (data.needsVerification) {
+        setErrorMessage(data.message);
+        setTimeout(() => {
+          router.push({ pathname: '/OTPVerification', params: { email: email.trim() } });
+        }, 1500);
+
+      } else {
+        setErrorMessage(data.message || 'Login failed');
       }
 
     } catch (error: any) {
-      console.log('❌ Login error:', error.response?.data || error.message);
-
-      if (error.response?.data?.message) {
-        setErrorMessage(error.response.data.message);
-      } else if (error.request) {
-        setErrorMessage(`Cannot connect to server at ${API_BASE_URL}`);
+      if (error.message?.includes('Network request failed')) {
+        setErrorMessage(`Cannot connect to server.\n• Backend is running?\n• Same WiFi?\n• IP correct: ${API_BASE_URL}`);
       } else {
-        setErrorMessage('An unexpected error occurred');
+        setErrorMessage('Unexpected error: ' + error.message);
       }
     } finally {
       setLoading(false);
@@ -59,136 +66,252 @@ const handleSubmit = async () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
 
-      {/* ✅ Inline error box */}
-      {errorMessage !== '' && (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText}>⚠️ {errorMessage}</Text>
+        {/* Background top half */}
+        <View style={styles.topBg} />
+
+        <View style={styles.card}>
+
+          {/* Icon + heading */}
+          <View style={styles.iconWrap}>
+            <Text style={styles.iconText}>⚡</Text>
+          </View>
+          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.subtitle}>Sign in to your account</Text>
+
+          {/* Error */}
+          {errorMessage !== '' && (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>⚠️ {errorMessage}</Text>
+            </View>
+          )}
+
+          {/* Email */}
+          <Text style={styles.label}>Email address</Text>
+          <View style={styles.inputWrap}>
+            <Text style={styles.inputIcon}>✉</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="you@example.com"
+              placeholderTextColor="#9ca3af"
+              value={email}
+              onChangeText={(t) => { setEmail(t); setErrorMessage(''); }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+
+          {/* Password */}
+          <Text style={styles.label}>Password</Text>
+          <View style={styles.inputWrap}>
+            <Text style={styles.inputIcon}>🔒</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="••••••••"
+              placeholderTextColor="#9ca3af"
+              value={password}
+              onChangeText={(t) => { setPassword(t); setErrorMessage(''); }}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+              <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁'}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Forgot password */}
+          <TouchableOpacity
+            onPress={() => router.push('/ForgotPassword')}
+            style={styles.forgotWrap}
+          >
+            <Text style={styles.forgotText}>Forgot password?</Text>
+          </TouchableOpacity>
+
+          {/* Sign in button */}
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleSubmit}
+            disabled={loading}
+            activeOpacity={0.85}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text style={styles.buttonText}>Sign in</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Register */}
+          <TouchableOpacity onPress={() => router.push('/RegistrationForm')}>
+            <Text style={styles.registerText}>
+              No account?{' '}
+              <Text style={styles.registerLink}>Register now</Text>
+            </Text>
+          </TouchableOpacity>
+
         </View>
-      )}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={(text) => { setEmail(text); setErrorMessage(''); }}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={(text) => { setPassword(text); setErrorMessage(''); }}
-        secureTextEntry
-      />
-
-      {/* Row container for Register and Forgot Password buttons */}
-      {/* Grouped container for Register and Forgot Password */}
-<View style={styles.linksContainer}>
-  <TouchableOpacity onPress={() => router.push('/RegistrationForm')}>
-    <Text style={styles.registerText}>Don't have an account? Register now</Text>
-  </TouchableOpacity>
-
-  <TouchableOpacity onPress={() => router.push('/ForgotPassword')}>
-    <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-  </TouchableOpacity>
-</View>
-
-      <TouchableOpacity
-        onPress={handleSubmit}
-        style={[styles.button, loading && styles.disabledBtn]}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" size="large" />
-        ) : (
-          <Text style={styles.loginText}>Login</Text>
-        )}
-      </TouchableOpacity>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#D9D9D9",
-    justifyContent: "center"
+    backgroundColor: '#f3f4f6',
+  },
+  scroll: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  topBg: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
+    height: '45%',
+    backgroundColor: '#1B1A31',
+  },
+  card: {
+    width: '88%',
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 28,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  iconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#1B1A31',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  iconText: {
+    fontSize: 24,
   },
   title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-    color: "#1B1A31"
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1B1A31',
+    marginBottom: 4,
   },
-  registerText: {
-    color: "#1B1A31",
-    fontSize: 15,
-    fontWeight: "bold"
+  subtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 24,
   },
-  forgotPasswordText: {
-    color: "#1B1A31",
+  errorBox: {
+    backgroundColor: '#fee2e2',
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#b91c1c',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 6,
+    marginTop: 12,
+  },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    height: 48,
+  },
+  inputIcon: {
     fontSize: 15,
-    fontWeight: "bold"
+    marginRight: 10,
+    opacity: 0.5,
   },
   input: {
-    height: 50,
-    marginBottom: 10,
-    backgroundColor: "#D9D9D9",
+    flex: 1,
+    fontSize: 15,
+    color: '#111827',
+  },
+  eyeBtn: {
+    padding: 4,
+  },
+  eyeIcon: {
+    fontSize: 16,
+    opacity: 0.5,
+  },
+  forgotWrap: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  forgotText: {
+    fontSize: 13,
+    color: '#6b7280',
   },
   button: {
     marginTop: 20,
-    backgroundColor: "#1B1A31",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center"
-  },
-  disabledBtn: {
-    opacity: 0.7,
-  },
-  loginText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff"
-  },
-  errorBox: {
-    backgroundColor: '#ff4444',
-    padding: 12,
-    borderRadius: 5,
-    marginBottom: 15,
-  },
-  errorText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  rowContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: '#1B1A31',
+    height: 50,
+    borderRadius: 12,
     alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 10,
+    justifyContent: 'center',
   },
-  linksContainer: {
-  alignItems: 'center',  // Centers both vertically
-  marginTop: 10,
-  marginBottom: 10,
-  gap: 8,  // Adds space between them
-},
-registerText: {
-  color: "#1B1A31",
-  fontSize: 15,
-  fontWeight: "bold",
-},
-forgotPasswordText: {
-  color: "#1B1A31",
-  fontSize: 14,
-  fontWeight: "600",
-},
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+    gap: 10,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e5e7eb',
+  },
+  dividerText: {
+    fontSize: 12,
+    color: '#9ca3af',
+  },
+  registerText: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  registerLink: {
+    color: '#1B1A31',
+    fontWeight: '700',
+  },
 });

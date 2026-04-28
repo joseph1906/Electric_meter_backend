@@ -19,8 +19,7 @@ export default function ResetPassword() {
   const [otpVerified, setOtpVerified] = useState(false);
   const inputs = useRef<TextInput[]>([]);
 
-  const API_BASE_URL = 'http://192.168.1.2:5000';
-
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
   // Countdown timer
   useEffect(() => {
     const timer = setInterval(() => {

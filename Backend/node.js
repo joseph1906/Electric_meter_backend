@@ -6,7 +6,6 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
-const PORT = 5000;
 
 app.use(cors({
   origin: '*',
@@ -21,16 +20,20 @@ console.log('🚀 Starting server...');
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  requireTLS: true,
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.Email_user,
     pass: process.env.Email_pass,
   },
   tls: {
-    rejectUnauthorized: false
-  }
+    rejectUnauthorized: false,
+    ciphers: 'SSLv3',
+    minVersion: 'TLSv1'
+  },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 });
 
 // Verify email transporter
@@ -621,7 +624,123 @@ app.get('/api/get-profile-image/:userId', (req, res) => {
   );
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n✅ Server running on http://192.168.1.2:${PORT}`);
+// GENERATE ELECTRICITY TOKEN
+app.post('/api/generate-electricity-token', async (req, res) => {
+  const { meterNumber, amount, userId } = req.body;
+
+  if (!meterNumber || !amount || !userId) {
+    return res.status(400).json({ success: false, message: 'Missing required fields' });
+  }
+
+  try {
+    // ====================================================
+    // 🔌 PLACE YOUR ELECTRICITY COMPANY API HERE
+    // Replace this mock with real API call like:
+    //
+    // const electricityResponse = await fetch('https://api.electricitycompany.com/generate-token', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     'Authorization': `Bearer ${process.env.ELECTRICITY_API_KEY}`,
+    //   },
+    //   body: JSON.stringify({
+    //     meter_number: meterNumber,
+    //     amount: amount,
+    //     currency: 'UGX',
+    //   }),
+    // });
+    // const electricityData = await electricityResponse.json();
+    // const token = electricityData.token;
+    // const units = electricityData.units;
+    // ====================================================
+
+    // 🧪 MOCK DATA — Remove when real API is ready
+    const token = Array.from({ length: 16 }, () =>
+      Math.floor(Math.random() * 10)
+    ).join('');
+    const units = (amount / 500).toFixed(2); // Mock: 1 unit per 500 UGX
+
+    // Save token to database
+    const transactionId = 'TXN' + Date.now() + Math.floor(Math.random() * 10000);
+
+    db.query(
+      `INSERT INTO PaymentMode 
+       (TransactionID, ID, Phone_number, Method, Amount, Unit_purchase, deleted_by_user) 
+       VALUES (?, ?, ?, ?, ?, ?, FALSE)`,
+      [transactionId, userId, null, 'Electricity Token', amount, units],
+      (err) => {
+        if (err) {
+          console.error('❌ Token save error:', err);
+          return res.status(500).json({ success: false, message: 'Failed to save token' });
+        }
+
+        console.log('✅ Token generated:', token);
+        res.json({
+          success: true,
+          token: token,
+          units: units,
+          transactionId: transactionId,
+          meterNumber: meterNumber,
+          amount: amount,
+        });
+      }
+    );
+  } catch (error) {
+    console.error('❌ Token generation error:', error);
+    res.status(500).json({ success: false, message: 'Token generation failed' });
+  }
+});
+
+// PROCESS PAYMENT
+app.post('/api/process-payment', async (req, res) => {
+  const { phoneNumber, amount, method, userId } = req.body;
+
+  if (!phoneNumber || !amount || !method) {
+    return res.status(400).json({ success: false, message: 'Missing required fields' });
+  }
+
+  try {
+    // ====================================================
+    // 💳 PLACE YOUR PAYMENT GATEWAY API HERE
+    // Replace this mock with real API call like:
+    //
+    // const paymentResponse = await fetch('https://api.paymentgateway.com/charge', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     'Authorization': `Bearer ${process.env.PAYMENT_API_KEY}`,
+    //   },
+    //   body: JSON.stringify({
+    //     phone: phoneNumber,
+    //     amount: amount,
+    //     currency: 'UGX',
+    //     method: method, // 'MTN' or 'Airtel'
+    //     reference: 'Payment for electricity',
+    //   }),
+    // });
+    // const paymentData = await paymentResponse.json();
+    // if (!paymentData.success) throw new Error(paymentData.message);
+    // ====================================================
+
+    // 🧪 MOCK — Always succeeds. Remove when real API is ready
+    console.log('✅ Payment processed for:', phoneNumber, 'Amount:', amount);
+    res.json({
+      success: true,
+      message: 'Payment successful',
+      reference: 'PAY' + Date.now(),
+      phoneNumber,
+      amount,
+      method,
+    });
+
+  } catch (error) {
+    console.error('❌ Payment error:', error);
+    res.status(500).json({ success: false, message: 'Payment failed: ' + error.message });
+  }
+});
+
+// CORRECT
+app.listen(process.env.PORT, '0.0.0.0', () => {
+  console.log(`\n✅ Server running on ${process.env.LOCAL}`);
   console.log('========================================\n');
 });
