@@ -3,6 +3,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const mysql = require('mysql2');
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
@@ -197,7 +198,7 @@ app.post('/api/register', async (req, res) => {
 
       // Send OTP email
       const mailOptions = {
-        from: `"Electric Meter Uganda" <${process.env.EMAIL_USER}>`,
+        from: `"Electric Meter Uganda" <${process.env.Email_user}>`,
         to: Email,
         subject: 'Your Verification Code - Electric Meter Uganda',
         html: `
@@ -373,11 +374,11 @@ app.get('/api/user-transactions/:userId', (req, res) => {
   const { userId } = req.params;
   console.log(`📋 Fetching transactions for user ID: ${userId}`);
 
-  const query = `SELECT TransactionID, ID, Phone_number, Method, Amount, Unit_purchase 
-                 FROM PaymentMode 
-                 WHERE ID = ? AND deleted_by_user = FALSE 
-                 ORDER BY TransactionID DESC`;
-
+  const query = `SELECT TransactionID, ID, Phone_number, Method, Amount, Unit_purchase, Token, token_used
+               FROM PaymentMode 
+               WHERE ID = ? AND deleted_by_user = FALSE 
+               ORDER BY TransactionID DESC`;
+               
   db.query(query, [userId], (err, results) => {
     if (err) {
       console.error('❌ Error fetching transactions:', err);
@@ -663,12 +664,13 @@ app.post('/api/generate-electricity-token', async (req, res) => {
     // Save token to database
     const transactionId = 'TXN' + Date.now() + Math.floor(Math.random() * 10000);
 
-    db.query(
-      `INSERT INTO PaymentMode 
-       (TransactionID, ID, Phone_number, Method, Amount, Unit_purchase, deleted_by_user) 
-       VALUES (?, ?, ?, ?, ?, ?, FALSE)`,
-      [transactionId, userId, null, 'Electricity Token', amount, units],
-      (err) => {
+    // CORRECT — Token column added
+db.query(
+  `INSERT INTO PaymentMode 
+   (TransactionID, ID, Phone_number, Method, Amount, Unit_purchase, Token, token_used, deleted_by_user) 
+   VALUES (?, ?, ?, ?, ?, ?, ?, FALSE, FALSE)`,
+  [transactionId, userId, null, 'Electricity Token', amount, units, token],
+    (err) => {
         if (err) {
           console.error('❌ Token save error:', err);
           return res.status(500).json({ success: false, message: 'Failed to save token' });
@@ -689,6 +691,21 @@ app.post('/api/generate-electricity-token', async (req, res) => {
     console.error('❌ Token generation error:', error);
     res.status(500).json({ success: false, message: 'Token generation failed' });
   }
+});
+
+// MARK TOKEN AS USED
+app.put('/api/mark-token-used/:transactionId', (req, res) => {
+  const { transactionId } = req.params;
+
+  db.query(
+    'UPDATE PaymentMode SET token_used = TRUE WHERE TransactionID = ?',
+    [transactionId],
+    (err, result) => {
+      if (err) return res.status(500).json({ success: false, message: err.message });
+      if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Transaction not found' });
+      res.json({ success: true, message: 'Token marked as used' });
+    }
+  );
 });
 
 // PROCESS PAYMENT

@@ -17,7 +17,6 @@ export default function Airtel() {
     const HandlePayment = () => {
     if (input && input.length === 10) {
         const units = calculateUnits(amount);
-        // ✅ ADD phoneNumber to the payment data
         setLastPayment({ 
             method: "Airtel", 
             amount: amount, 
@@ -37,7 +36,6 @@ export default function Airtel() {
     const handleBackspace = () => {
         setInput(input.slice(0, -1));
     };
-
 
     const handleClear = () => {
         setInput(""); 
@@ -185,5 +183,4 @@ const styles = StyleSheet.create({
         color:"#fff",
         opacity:0.8,
     },
-
 });

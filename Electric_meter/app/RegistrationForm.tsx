@@ -1,7 +1,7 @@
 import { moderateScale, verticalScale } from '@/assets/styling/scaling';
 import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator, Alert, Image, ScrollView,
   StyleSheet, Switch, Text, TextInput,
@@ -14,20 +14,12 @@ export default function RegistrationForm() {
   const [errorMessage, setErrorMessage] = useState('');
   const isSubmitting = useRef(false);
 
-  const API_BASE_URL = 'http://192.168.1.2:5000';
+  const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
   const [form, setForm] = useState({
-    Firstname: '',
-    Lastname: '',
-    NationalId: '',
-    Telephone: '',
-    Email: '',
-    Password: '',
-    ConfirmPassword: '',
-    District: '',
-    MeterNumber: '',
-    PhaseType: '',
-    Declaration: false,
+    Firstname: '', Lastname: '', NationalId: '', Telephone: '',
+    Email: '', Password: '', ConfirmPassword: '', District: '',
+    MeterNumber: '', PhaseType: '', Declaration: false,
   });
 
   const handleChange = (name: string, value: any) => {
@@ -44,16 +36,13 @@ export default function RegistrationForm() {
     if (form.Password !== form.ConfirmPassword) { setErrorMessage('Passwords do not match'); return false; }
     if (form.Password.length < 6) { setErrorMessage('Password must be at least 6 characters'); return false; }
     if (!form.Declaration) { setErrorMessage('You must agree to the terms and conditions'); return false; }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.Email)) { setErrorMessage('Please enter a valid email address'); return false; }
-
     const phoneRegex = /^[0-9]{10,}$/;
     if (!phoneRegex.test(form.Telephone.replace(/[^0-9]/g, ''))) {
       setErrorMessage('Please enter a valid phone number (at least 10 digits)');
       return false;
     }
-
     return true;
   };
 
@@ -61,12 +50,7 @@ export default function RegistrationForm() {
     if (isSubmitting.current) return;
     isSubmitting.current = true;
     setErrorMessage('');
-
-    if (!validateForm()) {
-      isSubmitting.current = false;
-      return;
-    }
-
+    if (!validateForm()) { isSubmitting.current = false; return; }
     setLoading(true);
 
     const submitData = {
@@ -79,35 +63,25 @@ export default function RegistrationForm() {
       District: form.District || null,
       MeterNumber: form.MeterNumber.trim() || null,
       PhaseType: form.PhaseType === 'default' ? null : form.PhaseType,
-      Declaration: form.Declaration
+      Declaration: form.Declaration,
     };
 
     try {
       const response = await axios.post(`${API_BASE_URL}/api/register`, submitData);
-
       if (response.data.success) {
         setErrorMessage('');
-        // ✅ Navigate to OTP screen with email
-        router.push({
-          pathname: '/OTPVerification',
-          params: { email: form.Email.trim().toLowerCase() }
-        });
+        router.push({ pathname: '/OTPVerification', params: { email: form.Email.trim().toLowerCase() } });
         setForm({
           Firstname: '', Lastname: '', NationalId: '', Telephone: '',
           Email: '', Password: '', ConfirmPassword: '', District: '',
           MeterNumber: '', PhaseType: '', Declaration: false,
         });
       }
-
     } catch (error: any) {
       let msg = 'An unexpected error occurred';
-      if (error.response && error.response.data) {
-        msg = error.response.data.message || `Server error (${error.response.status})`;
-      } else if (error.request) {
-        msg = `Cannot connect to server at ${API_BASE_URL}`;
-      } else {
-        msg = error.message || msg;
-      }
+      if (error.response?.data) msg = error.response.data.message || `Server error (${error.response.status})`;
+      else if (error.request) msg = `Cannot connect to server at ${API_BASE_URL}`;
+      else msg = error.message || msg;
       setErrorMessage(msg);
       Alert.alert('Error', msg);
     } finally {
@@ -116,251 +90,465 @@ export default function RegistrationForm() {
     }
   };
 
+  const inputStyle = (hasValue: boolean) => ({
+    ...styles.input,
+    borderColor: hasValue ? 'rgba(129,176,255,0.4)' : 'rgba(255,255,255,0.12)',
+  });
+
   return (
-    <ScrollView style={styles.MainContainer}>
-      <View style={styles.container}>
-        <TouchableOpacity onPress={() => router.push("/LoginForm")}>
-          <Image source={require("../assets/images/left-arrow.png")}
-            style={styles.Imgcontainer} />
+    <ScrollView style={styles.root} showsVerticalScrollIndicator={false}>
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.push('/LoginForm')} style={styles.backBtn}>
+          <Image source={require('../assets/images/left-arrow.png')} style={styles.backIcon} />
         </TouchableOpacity>
-        <Text style={styles.title}>Customer Registration</Text>
+        <Text style={styles.title}>Customer registration</Text>
+        <View style={{ width: 36 }} />
       </View>
 
+      {/* Error */}
       {errorMessage !== '' && (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>⚠️ {errorMessage}</Text>
         </View>
       )}
 
-      <TextInput
-        placeholder="First Name *" placeholderTextColor="#999"
-        style={styles.input} value={form.Firstname}
-        onChangeText={(text) => handleChange('Firstname', text)}
-      />
-      <TextInput
-        placeholder="Last Name *" placeholderTextColor="#999"
-        style={styles.input} value={form.Lastname}
-        onChangeText={(text) => handleChange('Lastname', text)}
-      />
-      <TextInput
-        placeholder="National ID / Passport Number" placeholderTextColor="#999"
-        style={styles.input} value={form.NationalId}
-        onChangeText={(text) => handleChange('NationalId', text)}
-      />
-      <TextInput
-        placeholder="Phone Number *" placeholderTextColor="#999"
-        style={styles.input} value={form.Telephone}
-        keyboardType="phone-pad"
-        onChangeText={(text) => handleChange('Telephone', text)}
-      />
-      <TextInput
-        placeholder="Email Address *" placeholderTextColor="#999"
-        style={styles.input} value={form.Email}
-        keyboardType="email-address" autoCapitalize="none"
-        onChangeText={(text) => handleChange('Email', text)}
-      />
-      <TextInput
-        placeholder="Password * (min 6 characters)" placeholderTextColor="#999"
-        style={styles.input} secureTextEntry value={form.Password}
-        onChangeText={(text) => handleChange('Password', text)}
-      />
-      <TextInput
-        placeholder="Confirm Password *" placeholderTextColor="#999"
-        style={styles.input} secureTextEntry value={form.ConfirmPassword}
-        onChangeText={(text) => handleChange('ConfirmPassword', text)}
-      />
-      <TextInput
-        placeholder="Meter Number" placeholderTextColor="#999"
-        style={styles.input} value={form.MeterNumber}
-        onChangeText={(text) => handleChange('MeterNumber', text)}
-      />
+      {/* Personal info */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Personal info</Text>
 
-      <Picker
-        selectedValue={form.District}
-        onValueChange={(itemValue) => handleChange('District', itemValue)}
-        style={styles.picker}
-      >
-        <Picker.Item label="Select District" value="" />
-        <Picker.Item label="Abim" value="Abim" />
-        <Picker.Item label="Adjumani" value="Adjumani" />
-        <Picker.Item label="Agago" value="Agago" />
-        <Picker.Item label="Alebtong" value="Alebtong" />
-        <Picker.Item label="Amolatar" value="Amolatar" />
-        <Picker.Item label="Amudat" value="Amudat" />
-        <Picker.Item label="Amuria" value="Amuria" />
-        <Picker.Item label="Amuru" value="Amuru" />
-        <Picker.Item label="Apac" value="Apac" />
-        <Picker.Item label="Arua" value="Arua" />
-        <Picker.Item label="Budaka" value="Budaka" />
-        <Picker.Item label="Bududa" value="Bududa" />
-        <Picker.Item label="Bugiri" value="Bugiri" />
-        <Picker.Item label="Bugweri" value="Bugweri" />
-        <Picker.Item label="Buhweju" value="Buhweju" />
-        <Picker.Item label="Buikwe" value="Buikwe" />
-        <Picker.Item label="Bukedea" value="Bukedea" />
-        <Picker.Item label="Bukomansimbi" value="Bukomansimbi" />
-        <Picker.Item label="Bukwo" value="Bukwo" />
-        <Picker.Item label="Bulambuli" value="Bulambuli" />
-        <Picker.Item label="Buliisa" value="Buliisa" />
-        <Picker.Item label="Bundibugyo" value="Bundibugyo" />
-        <Picker.Item label="Bunyangabu" value="Bunyangabu" />
-        <Picker.Item label="Bushenyi" value="Bushenyi" />
-        <Picker.Item label="Busia" value="Busia" />
-        <Picker.Item label="Butaleja" value="Butaleja" />
-        <Picker.Item label="Butambala" value="Butambala" />
-        <Picker.Item label="Butebo" value="Butebo" />
-        <Picker.Item label="Buvuma" value="Buvuma" />
-        <Picker.Item label="Buyende" value="Buyende" />
-        <Picker.Item label="Dokolo" value="Dokolo" />
-        <Picker.Item label="Gomba" value="Gomba" />
-        <Picker.Item label="Gulu" value="Gulu" />
-        <Picker.Item label="Hoima" value="Hoima" />
-        <Picker.Item label="Ibanda" value="Ibanda" />
-        <Picker.Item label="Iganga" value="Iganga" />
-        <Picker.Item label="Isingiro" value="Isingiro" />
-        <Picker.Item label="Jinja" value="Jinja" />
-        <Picker.Item label="Kaabong" value="Kaabong" />
-        <Picker.Item label="Kabale" value="Kabale" />
-        <Picker.Item label="Kabarole" value="Kabarole" />
-        <Picker.Item label="Kaberamaido" value="Kaberamaido" />
-        <Picker.Item label="Kagadi" value="Kagadi" />
-        <Picker.Item label="Kakumiro" value="Kakumiro" />
-        <Picker.Item label="Kalangala" value="Kalangala" />
-        <Picker.Item label="Kaliro" value="Kaliro" />
-        <Picker.Item label="Kalungu" value="Kalungu" />
-        <Picker.Item label="Kampala" value="Kampala" />
-        <Picker.Item label="Kamuli" value="Kamuli" />
-        <Picker.Item label="Kamwenge" value="Kamwenge" />
-        <Picker.Item label="Kanungu" value="Kanungu" />
-        <Picker.Item label="Kapchorwa" value="Kapchorwa" />
-        <Picker.Item label="Kapelebyong" value="Kapelebyong" />
-        <Picker.Item label="Kasanda" value="Kasanda" />
-        <Picker.Item label="Kasese" value="Kasese" />
-        <Picker.Item label="Katakwi" value="Katakwi" />
-        <Picker.Item label="Kayunga" value="Kayunga" />
-        <Picker.Item label="Kibaale" value="Kibaale" />
-        <Picker.Item label="Kiboga" value="Kiboga" />
-        <Picker.Item label="Kibuku" value="Kibuku" />
-        <Picker.Item label="Kikuube" value="Kikuube" />
-        <Picker.Item label="Kiruhura" value="Kiruhura" />
-        <Picker.Item label="Kiryandongo" value="Kiryandongo" />
-        <Picker.Item label="Kisoro" value="Kisoro" />
-        <Picker.Item label="Kitagwenda" value="Kitagwenda" />
-        <Picker.Item label="Kitgum" value="Kitgum" />
-        <Picker.Item label="Koboko" value="Koboko" />
-        <Picker.Item label="Kole" value="Kole" />
-        <Picker.Item label="Kotido" value="Kotido" />
-        <Picker.Item label="Kumi" value="Kumi" />
-        <Picker.Item label="Kwania" value="Kwania" />
-        <Picker.Item label="Kween" value="Kween" />
-        <Picker.Item label="Kyankwanzi" value="Kyankwanzi" />
-        <Picker.Item label="Kyegegwa" value="Kyegegwa" />
-        <Picker.Item label="Kyenjojo" value="Kyenjojo" />
-        <Picker.Item label="Kyotera" value="Kyotera" />
-        <Picker.Item label="Lamwo" value="Lamwo" />
-        <Picker.Item label="Lira" value="Lira" />
-        <Picker.Item label="Luuka" value="Luuka" />
-        <Picker.Item label="Luwero" value="Luwero" />
-        <Picker.Item label="Lwengo" value="Lwengo" />
-        <Picker.Item label="Lyantonde" value="Lyantonde" />
-        <Picker.Item label="Madi-Okollo" value="Madi-Okollo" />
-        <Picker.Item label="Manafwa" value="Manafwa" />
-        <Picker.Item label="Maracha" value="Maracha" />
-        <Picker.Item label="Masaka" value="Masaka" />
-        <Picker.Item label="Masindi" value="Masindi" />
-        <Picker.Item label="Mayuge" value="Mayuge" />
-        <Picker.Item label="Mbale" value="Mbale" />
-        <Picker.Item label="Mbarara" value="Mbarara" />
-        <Picker.Item label="Mitooma" value="Mitooma" />
-        <Picker.Item label="Mityana" value="Mityana" />
-        <Picker.Item label="Moroto" value="Moroto" />
-        <Picker.Item label="Moyo" value="Moyo" />
-        <Picker.Item label="Mpigi" value="Mpigi" />
-        <Picker.Item label="Mubende" value="Mubende" />
-        <Picker.Item label="Mukono" value="Mukono" />
-        <Picker.Item label="Nabilatuk" value="Nabilatuk" />
-        <Picker.Item label="Nakapiripirit" value="Nakapiripirit" />
-        <Picker.Item label="Nakaseke" value="Nakaseke" />
-        <Picker.Item label="Nakasongola" value="Nakasongola" />
-        <Picker.Item label="Namayingo" value="Namayingo" />
-        <Picker.Item label="Namisindwa" value="Namisindwa" />
-        <Picker.Item label="Namutumba" value="Namutumba" />
-        <Picker.Item label="Napak" value="Napak" />
-        <Picker.Item label="Nebbi" value="Nebbi" />
-        <Picker.Item label="Ngora" value="Ngora" />
-        <Picker.Item label="Ntoroko" value="Ntoroko" />
-        <Picker.Item label="Ntungamo" value="Ntungamo" />
-        <Picker.Item label="Nwoya" value="Nwoya" />
-        <Picker.Item label="Obongi" value="Obongi" />
-        <Picker.Item label="Omoro" value="Omoro" />
-        <Picker.Item label="Otuke" value="Otuke" />
-        <Picker.Item label="Oyam" value="Oyam" />
-        <Picker.Item label="Pader" value="Pader" />
-        <Picker.Item label="Pakwach" value="Pakwach" />
-        <Picker.Item label="Pallisa" value="Pallisa" />
-        <Picker.Item label="Rakai" value="Rakai" />
-        <Picker.Item label="Rubanda" value="Rubanda" />
-        <Picker.Item label="Rubirizi" value="Rubirizi" />
-        <Picker.Item label="Rukiga" value="Rukiga" />
-        <Picker.Item label="Rukungiri" value="Rukungiri" />
-        <Picker.Item label="Sembabule" value="Sembabule" />
-        <Picker.Item label="Serere" value="Serere" />
-        <Picker.Item label="Sheema" value="Sheema" />
-        <Picker.Item label="Sironko" value="Sironko" />
-        <Picker.Item label="Soroti" value="Soroti" />
-        <Picker.Item label="Tororo" value="Tororo" />
-        <Picker.Item label="Wakiso" value="Wakiso" />
-        <Picker.Item label="Yumbe" value="Yumbe" />
-        <Picker.Item label="Zombo" value="Zombo" />
-      </Picker>
+        <View style={styles.row}>
+          <View style={styles.halfCol}>
+            <Text style={styles.fieldLabel}>First name *</Text>
+            <TextInput
+              style={inputStyle(!!form.Firstname)}
+              placeholder="Jean"
+              placeholderTextColor="#6b7280"
+              value={form.Firstname}
+              onChangeText={(t) => handleChange('Firstname', t)}
+            />
+          </View>
+          <View style={styles.halfCol}>
+            <Text style={styles.fieldLabel}>Last name *</Text>
+            <TextInput
+              style={inputStyle(!!form.Lastname)}
+              placeholder="Pierre"
+              placeholderTextColor="#6b7280"
+              value={form.Lastname}
+              onChangeText={(t) => handleChange('Lastname', t)}
+            />
+          </View>
+        </View>
 
-      <Picker
-        selectedValue={form.PhaseType}
-        onValueChange={(itemValue) => handleChange('PhaseType', itemValue)}
-        style={styles.picker}
-      >
-        <Picker.Item label="Select Phase Type" value="default" />
-        <Picker.Item label="Single Phase" value="Single Phase" />
-        <Picker.Item label="Three Phase" value="Three Phase" />
-      </Picker>
-
-      <View style={styles.checkboxContainer}>
-        <Switch
-          value={form.Declaration}
-          onValueChange={(value) => handleChange('Declaration', value)}
-          trackColor={{ false: "#767577", true: "#81b0ff" }}
-          thumbColor={form.Declaration ? "#f5dd4b" : "#f4f3f4"}
+        <Text style={styles.fieldLabel}>National ID / Passport</Text>
+        <TextInput
+          style={inputStyle(!!form.NationalId)}
+          placeholder="CM90012345"
+          placeholderTextColor="#6b7280"
+          value={form.NationalId}
+          onChangeText={(t) => handleChange('NationalId', t)}
         />
-        <Text style={styles.label}>I agree to the terms and conditions *</Text>
+
+        <Text style={styles.fieldLabel}>Phone number *</Text>
+        <TextInput
+          style={inputStyle(!!form.Telephone)}
+          placeholder="+256 771 234 567"
+          placeholderTextColor="#6b7280"
+          keyboardType="phone-pad"
+          value={form.Telephone}
+          onChangeText={(t) => handleChange('Telephone', t)}
+        />
+
+        <Text style={styles.fieldLabel}>Email address *</Text>
+        <TextInput
+          style={inputStyle(!!form.Email)}
+          placeholder="you@example.com"
+          placeholderTextColor="#6b7280"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={form.Email}
+          onChangeText={(t) => handleChange('Email', t)}
+        />
       </View>
 
+      {/* Security */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Security</Text>
+
+        <Text style={styles.fieldLabel}>Password * (min 6 characters)</Text>
+        <TextInput
+          style={inputStyle(!!form.Password)}
+          placeholder="••••••••"
+          placeholderTextColor="#6b7280"
+          secureTextEntry
+          value={form.Password}
+          onChangeText={(t) => handleChange('Password', t)}
+        />
+
+        <Text style={styles.fieldLabel}>Confirm password *</Text>
+        <TextInput
+          style={inputStyle(!!form.ConfirmPassword)}
+          placeholder="••••••••"
+          placeholderTextColor="#6b7280"
+          secureTextEntry
+          value={form.ConfirmPassword}
+          onChangeText={(t) => handleChange('ConfirmPassword', t)}
+        />
+      </View>
+
+      {/* Meter details */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Meter details</Text>
+
+        <Text style={styles.fieldLabel}>Meter number</Text>
+        <TextInput
+          style={inputStyle(!!form.MeterNumber)}
+          placeholder="MTR-00482910"
+          placeholderTextColor="#6b7280"
+          value={form.MeterNumber}
+          onChangeText={(t) => handleChange('MeterNumber', t)}
+        />
+
+        <View style={styles.row}>
+          <View style={styles.halfCol}>
+            <Text style={styles.fieldLabel}>District</Text>
+            <View style={styles.pickerWrap}>
+              <Picker
+                selectedValue={form.District}
+                onValueChange={(v) => handleChange('District', v)}
+                style={styles.picker}
+                dropdownIconColor="#9ca3af"
+              >
+                <Picker.Item label="Select district" value="" color="#6b7280" />
+                <Picker.Item label="Abim" value="Abim" color="#fff" />
+                <Picker.Item label="Adjumani" value="Adjumani" color="#fff" />
+                <Picker.Item label="Agago" value="Agago" color="#fff" />
+                <Picker.Item label="Alebtong" value="Alebtong" color="#fff" />
+                <Picker.Item label="Amolatar" value="Amolatar" color="#fff" />
+                <Picker.Item label="Amudat" value="Amudat" color="#fff" />
+                <Picker.Item label="Amuria" value="Amuria" color="#fff" />
+                <Picker.Item label="Amuru" value="Amuru" color="#fff" />
+                <Picker.Item label="Apac" value="Apac" color="#fff" />
+                <Picker.Item label="Arua" value="Arua" color="#fff" />
+                <Picker.Item label="Budaka" value="Budaka" color="#fff" />
+                <Picker.Item label="Bududa" value="Bududa" color="#fff" />
+                <Picker.Item label="Bugiri" value="Bugiri" color="#fff" />
+                <Picker.Item label="Bugweri" value="Bugweri" color="#fff" />
+                <Picker.Item label="Buhweju" value="Buhweju" color="#fff" />
+                <Picker.Item label="Buikwe" value="Buikwe" color="#fff" />
+                <Picker.Item label="Bukedea" value="Bukedea" color="#fff" />
+                <Picker.Item label="Bukomansimbi" value="Bukomansimbi" color="#fff" />
+                <Picker.Item label="Bukwo" value="Bukwo" color="#fff" />
+                <Picker.Item label="Bulambuli" value="Bulambuli" color="#fff" />
+                <Picker.Item label="Buliisa" value="Buliisa" color="#fff" />
+                <Picker.Item label="Bundibugyo" value="Bundibugyo" color="#fff" />
+                <Picker.Item label="Bunyangabu" value="Bunyangabu" color="#fff" />
+                <Picker.Item label="Bushenyi" value="Bushenyi" color="#fff" />
+                <Picker.Item label="Busia" value="Busia" color="#fff" />
+                <Picker.Item label="Butaleja" value="Butaleja" color="#fff" />
+                <Picker.Item label="Butambala" value="Butambala" color="#fff" />
+                <Picker.Item label="Butebo" value="Butebo" color="#fff" />
+                <Picker.Item label="Buvuma" value="Buvuma" color="#fff" />
+                <Picker.Item label="Buyende" value="Buyende" color="#fff" />
+                <Picker.Item label="Dokolo" value="Dokolo" color="#fff" />
+                <Picker.Item label="Gomba" value="Gomba" color="#fff" />
+                <Picker.Item label="Gulu" value="Gulu" color="#fff" />
+                <Picker.Item label="Hoima" value="Hoima" color="#fff" />
+                <Picker.Item label="Ibanda" value="Ibanda" color="#fff" />
+                <Picker.Item label="Iganga" value="Iganga" color="#fff" />
+                <Picker.Item label="Isingiro" value="Isingiro" color="#fff" />
+                <Picker.Item label="Jinja" value="Jinja" color="#fff" />
+                <Picker.Item label="Kaabong" value="Kaabong" color="#fff" />
+                <Picker.Item label="Kabale" value="Kabale" color="#fff" />
+                <Picker.Item label="Kabarole" value="Kabarole" color="#fff" />
+                <Picker.Item label="Kaberamaido" value="Kaberamaido" color="#fff" />
+                <Picker.Item label="Kagadi" value="Kagadi" color="#fff" />
+                <Picker.Item label="Kakumiro" value="Kakumiro" color="#fff" />
+                <Picker.Item label="Kalangala" value="Kalangala" color="#fff" />
+                <Picker.Item label="Kaliro" value="Kaliro" color="#fff" />
+                <Picker.Item label="Kalungu" value="Kalungu" color="#fff" />
+                <Picker.Item label="Kampala" value="Kampala" color="#fff" />
+                <Picker.Item label="Kamuli" value="Kamuli" color="#fff" />
+                <Picker.Item label="Kamwenge" value="Kamwenge" color="#fff" />
+                <Picker.Item label="Kanungu" value="Kanungu" color="#fff" />
+                <Picker.Item label="Kapchorwa" value="Kapchorwa" color="#fff" />
+                <Picker.Item label="Kapelebyong" value="Kapelebyong" color="#fff" />
+                <Picker.Item label="Kasanda" value="Kasanda" color="#fff" />
+                <Picker.Item label="Kasese" value="Kasese" color="#fff" />
+                <Picker.Item label="Katakwi" value="Katakwi" color="#fff" />
+                <Picker.Item label="Kayunga" value="Kayunga" color="#fff" />
+                <Picker.Item label="Kibaale" value="Kibaale" color="#fff" />
+                <Picker.Item label="Kiboga" value="Kiboga" color="#fff" />
+                <Picker.Item label="Kibuku" value="Kibuku" color="#fff" />
+                <Picker.Item label="Kikuube" value="Kikuube" color="#fff" />
+                <Picker.Item label="Kiruhura" value="Kiruhura" color="#fff" />
+                <Picker.Item label="Kiryandongo" value="Kiryandongo" color="#fff" />
+                <Picker.Item label="Kisoro" value="Kisoro" color="#fff" />
+                <Picker.Item label="Kitagwenda" value="Kitagwenda" color="#fff" />
+                <Picker.Item label="Kitgum" value="Kitgum" color="#fff" />
+                <Picker.Item label="Koboko" value="Koboko" color="#fff" />
+                <Picker.Item label="Kole" value="Kole" color="#fff" />
+                <Picker.Item label="Kotido" value="Kotido" color="#fff" />
+                <Picker.Item label="Kumi" value="Kumi" color="#fff" />
+                <Picker.Item label="Kwania" value="Kwania" color="#fff" />
+                <Picker.Item label="Kween" value="Kween" color="#fff" />
+                <Picker.Item label="Kyankwanzi" value="Kyankwanzi" color="#fff" />
+                <Picker.Item label="Kyegegwa" value="Kyegegwa" color="#fff" />
+                <Picker.Item label="Kyenjojo" value="Kyenjojo" color="#fff" />
+                <Picker.Item label="Kyotera" value="Kyotera" color="#fff" />
+                <Picker.Item label="Lamwo" value="Lamwo" color="#fff" />
+                <Picker.Item label="Lira" value="Lira" color="#fff" />
+                <Picker.Item label="Luuka" value="Luuka" color="#fff" />
+                <Picker.Item label="Luwero" value="Luwero" color="#fff" />
+                <Picker.Item label="Lwengo" value="Lwengo" color="#fff" />
+                <Picker.Item label="Lyantonde" value="Lyantonde" color="#fff" />
+                <Picker.Item label="Madi-Okollo" value="Madi-Okollo" color="#fff" />
+                <Picker.Item label="Manafwa" value="Manafwa" color="#fff" />
+                <Picker.Item label="Maracha" value="Maracha" color="#fff" />
+                <Picker.Item label="Masaka" value="Masaka" color="#fff" />
+                <Picker.Item label="Masindi" value="Masindi" color="#fff" />
+                <Picker.Item label="Mayuge" value="Mayuge" color="#fff" />
+                <Picker.Item label="Mbale" value="Mbale" color="#fff" />
+                <Picker.Item label="Mbarara" value="Mbarara" color="#fff" />
+                <Picker.Item label="Mitooma" value="Mitooma" color="#fff" />
+                <Picker.Item label="Mityana" value="Mityana" color="#fff" />
+                <Picker.Item label="Moroto" value="Moroto" color="#fff" />
+                <Picker.Item label="Moyo" value="Moyo" color="#fff" />
+                <Picker.Item label="Mpigi" value="Mpigi" color="#fff" />
+                <Picker.Item label="Mubende" value="Mubende" color="#fff" />
+                <Picker.Item label="Mukono" value="Mukono" color="#fff" />
+                <Picker.Item label="Nabilatuk" value="Nabilatuk" color="#fff" />
+                <Picker.Item label="Nakapiripirit" value="Nakapiripirit" color="#fff" />
+                <Picker.Item label="Nakaseke" value="Nakaseke" color="#fff" />
+                <Picker.Item label="Nakasongola" value="Nakasongola" color="#fff" />
+                <Picker.Item label="Namayingo" value="Namayingo" color="#fff" />
+                <Picker.Item label="Namisindwa" value="Namisindwa" color="#fff" />
+                <Picker.Item label="Namutumba" value="Namutumba" color="#fff" />
+                <Picker.Item label="Napak" value="Napak" color="#fff" />
+                <Picker.Item label="Nebbi" value="Nebbi" color="#fff" />
+                <Picker.Item label="Ngora" value="Ngora" color="#fff" />
+                <Picker.Item label="Ntoroko" value="Ntoroko" color="#fff" />
+                <Picker.Item label="Ntungamo" value="Ntungamo" color="#fff" />
+                <Picker.Item label="Nwoya" value="Nwoya" color="#fff" />
+                <Picker.Item label="Obongi" value="Obongi" color="#fff" />
+                <Picker.Item label="Omoro" value="Omoro" color="#fff" />
+                <Picker.Item label="Otuke" value="Otuke" color="#fff" />
+                <Picker.Item label="Oyam" value="Oyam" color="#fff" />
+                <Picker.Item label="Pader" value="Pader" color="#fff" />
+                <Picker.Item label="Pakwach" value="Pakwach" color="#fff" />
+                <Picker.Item label="Pallisa" value="Pallisa" color="#fff" />
+                <Picker.Item label="Rakai" value="Rakai" color="#fff" />
+                <Picker.Item label="Rubanda" value="Rubanda" color="#fff" />
+                <Picker.Item label="Rubirizi" value="Rubirizi" color="#fff" />
+                <Picker.Item label="Rukiga" value="Rukiga" color="#fff" />
+                <Picker.Item label="Rukungiri" value="Rukungiri" color="#fff" />
+                <Picker.Item label="Sembabule" value="Sembabule" color="#fff" />
+                <Picker.Item label="Serere" value="Serere" color="#fff" />
+                <Picker.Item label="Sheema" value="Sheema" color="#fff" />
+                <Picker.Item label="Sironko" value="Sironko" color="#fff" />
+                <Picker.Item label="Soroti" value="Soroti" color="#fff" />
+                <Picker.Item label="Tororo" value="Tororo" color="#fff" />
+                <Picker.Item label="Wakiso" value="Wakiso" color="#fff" />
+                <Picker.Item label="Yumbe" value="Yumbe" color="#fff" />
+                <Picker.Item label="Zombo" value="Zombo" color="#fff" />
+              </Picker>
+            </View>
+          </View>
+
+          <View style={styles.halfCol}>
+            <Text style={styles.fieldLabel}>Phase type</Text>
+            <View style={styles.pickerWrap}>
+              <Picker
+                selectedValue={form.PhaseType}
+                onValueChange={(v) => handleChange('PhaseType', v)}
+                style={styles.picker}
+                dropdownIconColor="#9ca3af"
+              >
+                <Picker.Item label="Select phase" value="default" color="#6b7280" />
+                <Picker.Item label="Single phase" value="Single Phase" color="#fff" />
+                <Picker.Item label="Three phase" value="Three Phase" color="#fff" />
+              </Picker>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Declaration */}
+      <View style={styles.declarationBox}>
+        <Switch
+          value={form.Declaration}
+          onValueChange={(v) => handleChange('Declaration', v)}
+          trackColor={{ false: '#374151', true: '#484763' }}
+          thumbColor={form.Declaration ? '#81b0ff' : '#6b7280'}
+        />
+        <Text style={styles.declarationText}>
+          I agree to the{' '}
+          <Text style={{ color: '#81b0ff' }}>terms and conditions</Text> *
+        </Text>
+      </View>
+
+      {/* Submit */}
       <TouchableOpacity
         style={[styles.submitBtn, loading && styles.disabledBtn]}
         onPress={handleSubmit}
         disabled={loading}
+        activeOpacity={0.85}
       >
         {loading ? (
-          <ActivityIndicator color="#fff" size="large" />
+          <ActivityIndicator color="#fff" size="small" />
         ) : (
           <Text style={styles.submitText}>Register</Text>
         )}
       </TouchableOpacity>
+
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  MainContainer: { padding: 40, backgroundColor: '#1B1A31' },
-  container: { alignContent: "center", justifyContent: "center" },
-  title: { textAlign: "center", fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: "#d9d9d9", marginTop: 10, fontStyle: "italic" },
-  input: { borderWidth: 1, borderColor: '#ccc', backgroundColor: "#fff", padding: 10, marginBottom: 10, color: "#000", borderRadius: 5, fontSize: 15 },
-  picker: { borderWidth: 1, borderColor: '#CCC', backgroundColor: "#fff", width: "100%", height: 50, marginBottom: 10, borderRadius: 5, color: "#000" },
-  label: { fontSize: 15, marginVertical: 5, marginBottom: 10, marginLeft: 10, color: "#d9d9d9" },
-  checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  submitBtn: { backgroundColor: '#484763', padding: 15, borderRadius: 5, alignItems: 'center', marginBottom: 20 },
-  disabledBtn: { opacity: 0.7 },
-  submitText: { color: '#fff', fontWeight: 'bold', fontSize: 20 },
-  Imgcontainer: { width: moderateScale(14), height: verticalScale(18) },
-  errorBox: { backgroundColor: '#ff4444', padding: 12, borderRadius: 5, marginBottom: 15 },
-  errorText: { color: '#fff', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
+  root: {
+    flex: 1,
+    backgroundColor: '#1B1A31',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    width: moderateScale(14),
+    height: verticalScale(14),
+    tintColor: '#fff',
+  },
+  title: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    flex: 1,
+  },
+
+  // Error
+  errorBox: {
+    backgroundColor: 'rgba(239,68,68,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.4)',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#fca5a5',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+
+  // Section card
+  section: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  sectionLabel: {
+    color: '#6b7280',
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 12,
+  },
+
+  // Fields
+  fieldLabel: {
+    color: '#9ca3af',
+    fontSize: 11,
+    marginBottom: 4,
+    marginTop: 4,
+  },
+  input: {
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 8,
+    padding: 11,
+    color: '#fff',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+
+  // Row layout
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  halfCol: {
+    flex: 1,
+  },
+
+  // Picker
+  pickerWrap: {
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 8,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  picker: {
+    color: '#fff',
+    height: 48,
+  },
+
+  // Declaration
+  declarationBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 20,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  declarationText: {
+    color: '#d1d5db',
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 20,
+  },
+
+  // Submit
+  submitBtn: {
+    backgroundColor: '#484763',
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  disabledBtn: {
+    opacity: 0.6,
+  },
+  submitText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

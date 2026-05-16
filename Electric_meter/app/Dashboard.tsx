@@ -3,9 +3,18 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import ChartOne from "./ChartOne";
+import { BackHandler } from 'react-native';
 
 export default function Dashboard() {
   const [user, setUser] = useState<{ Firstname: string; Lastname: string } | null>(null);
+  
+  useEffect(() => {
+  const backHandler = BackHandler.addEventListener(
+    'hardwareBackPress',
+    () => true 
+  );
+  return () => backHandler.remove();
+}, []);
 
   useEffect(() => {
     const loadUser = async () => {

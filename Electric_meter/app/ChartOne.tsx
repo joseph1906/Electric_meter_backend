@@ -10,69 +10,95 @@ interface BarData {
   [key: string]: any;
 }
 
-export default function ChartOne () {
+export default function ChartOne() {
   const [selectedBarIndex, setSelectedBarIndex] = useState<number | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
-      const monthlyData = useMemo(
-      () => generateMonthlyData(currentYear, currentMonth),
-      [currentYear, currentMonth]
+  const monthlyData = useMemo(
+    () => generateMonthlyData(currentYear, currentMonth),
+    [currentYear, currentMonth],
   );
 
-      const getMonthName = (month: number) => {
-      const months = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-      ];
+  const getMonthName = (month: number) => {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     return months[month - 1] ?? "";
   };
 
-
-
-      const navigateMonth = (direction: number) => {
-      let newMonth = currentMonth + direction;
-      let newYear = currentYear;
-      if (newMonth > 12) { newMonth = 1; newYear++; }
-      else if (newMonth < 1) { newMonth = 12; newYear--; }
-      setCurrentMonth(newMonth);
-      setCurrentYear(newYear);
-      setSelectedBarIndex(null);
+  const navigateMonth = (direction: number) => {
+    let newMonth = currentMonth + direction;
+    let newYear = currentYear;
+    if (newMonth > 12) {
+      newMonth = 1;
+      newYear++;
+    } else if (newMonth < 1) {
+      newMonth = 12;
+      newYear--;
+    }
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+    setSelectedBarIndex(null);
   };
 
   const chartData = monthlyData.map((item, index) => ({
-      ...item,
-      topLabelComponent: () =>
+    ...item,
+    topLabelComponent: () =>
       selectedBarIndex === index ? (
-        <Text style={{ color: "#000", fontSize: 10, fontWeight: "600", marginBottom: 4 }}>
+        <Text
+          style={{
+            color: "#000",
+            fontSize: 10,
+            fontWeight: "600",
+            marginBottom: 4,
+          }}
+        >
           {item.value} kWh
         </Text>
       ) : null,
   }));
 
-
-  return(
+  return (
     <ScrollView>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16, }}>
-          <TouchableOpacity onPress={() => navigateMonth(-1)} hitSlop={20}>
-            <MaterialIcons name="chevron-left" size={24} color={"#000"} />
-          </TouchableOpacity>
-          <Text style={{ fontSize: 18, fontWeight: "600", color: "#000" }}>
-            {getMonthName(currentMonth)} {currentYear}
-          </Text>
-          <TouchableOpacity onPress={() => navigateMonth(1)} hitSlop={20}>
-            <MaterialIcons name="chevron-right" size={24} color={"#000"} />
-          </TouchableOpacity>
-        </View>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
+        <TouchableOpacity onPress={() => navigateMonth(-1)} hitSlop={20}>
+          <MaterialIcons name="chevron-left" size={24} color={"#000"} />
+        </TouchableOpacity>
+        <Text style={{ fontSize: 18, fontWeight: "600", color: "#000" }}>
+          {getMonthName(currentMonth)} {currentYear}
+        </Text>
+        <TouchableOpacity onPress={() => navigateMonth(1)} hitSlop={20}>
+          <MaterialIcons name="chevron-right" size={24} color={"#000"} />
+        </TouchableOpacity>
+      </View>
 
-    <BarChart 
-    data={chartData}
-    gradientColor={"#4c669f"}
-    frontColor={"#3b5998"}
-    barBorderRadius={4}
-    yAxisThickness={0}
-    xAxisThickness={0}
-    />
+      <BarChart
+        data={chartData}
+        gradientColor={"#4c669f"}
+        frontColor={"#3b5998"}
+        barBorderRadius={4}
+        yAxisThickness={0}
+        xAxisThickness={0}
+      />
     </ScrollView>
   );
 }

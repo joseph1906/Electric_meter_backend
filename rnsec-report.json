@@ -1,0 +1,594 @@
+{
+  "findings": [
+    {
+      "ruleId": "WEAK_TLS_CONFIGURATION",
+      "description": "Weak cipher suite detected: DES",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 1,
+      "suggestion": "Remove weak cipher DES. Use strong ciphers like AES-GCM, ChaCha20-Poly1305."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.error() logging Personal Identifiable Information (PII): ❌ Email transporter error:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 42,
+      "snippet": "transporter.verify((error) => {\r\n  if (error) {\r\n    console.error('❌ Email transporter error:', error);\r\n  } else {\r\n    console.log('✅ Email transporter ready');\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Personal Identifiable Information (PII): ✅ Email transporter ready",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 44,
+      "snippet": "    console.error('❌ Email transporter error:', error);\r\n  } else {\r\n    console.log('✅ Email transporter ready');\r\n  }\r\n});\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Personal Identifiable Information (PII): req.body.Email",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 120,
+      "snippet": "// LOGIN\r\napp.post('/api/login', async (req, res) => {\r\n  console.log('🔐 Login attempt:', req.body.Email);\r\n  const { Email, Password } = req.body;\r\n\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Personal Identifiable Information (PII): ✅ OTP email sent to:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 221,
+      "snippet": "      try {\r\n        await transporter.sendMail(mailOptions);\r\n        console.log('✅ OTP email sent to:', Email);\r\n        res.json({ \r\n          success: true, \r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.error() logging Personal Identifiable Information (PII): ❌ Email sending error:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 229,
+      "snippet": "        });\r\n      } catch (emailError) {\r\n        console.error('❌ Email sending error:', emailError);\r\n        res.json({ \r\n          success: true, \r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Personal Identifiable Information (PII): email",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 246,
+      "snippet": "app.post('/api/verify-otp', (req, res) => {\r\n  const { email, otp } = req.body;\r\n  console.log('🔍 OTP verification attempt for:', email);\r\n\r\n  if (!email || !otp) {\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Personal Identifiable Information (PII): ✅ Email verified for:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 279,
+      "snippet": "      (err) => {\r\n        if (err) return res.status(500).json({ success: false, message: 'Database error' });\r\n        console.log('✅ Email verified for:', email);\r\n        res.json({ success: true, message: 'Email verified successfully! You can now login.' });\r\n      }\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Personal Identifiable Information (PII): email",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 289,
+      "snippet": "app.post('/api/resend-otp', async (req, res) => {\r\n  const { email } = req.body;\r\n  console.log('🔄 Resend OTP request for:', email);\r\n\r\n  if (!email) {\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Personal Identifiable Information (PII): email",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 336,
+      "snippet": "        try {\r\n          await transporter.sendMail(mailOptions);\r\n          console.log('✅ New OTP sent to:', email);\r\n          res.json({ success: true, message: 'New verification code sent to your email.' });\r\n        } catch (emailError) {\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.error() logging Personal Identifiable Information (PII): ❌ Email error:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 339,
+      "snippet": "          res.json({ success: true, message: 'New verification code sent to your email.' });\r\n        } catch (emailError) {\r\n          console.error('❌ Email error:', emailError);\r\n          res.status(500).json({ success: false, message: 'Failed to send email. Please try again.' });\r\n        }\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Password/Credentials: 🔑 Forgot password request for:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 457,
+      "snippet": "app.post('/api/forgot-password', async (req, res) => {\r\n  const { email } = req.body;\r\n  console.log('🔑 Forgot password request for:', email);\r\n\r\n  if (!email) {\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Password/Credentials: ✅ Password reset OTP sent to:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 503,
+      "snippet": "        try {\r\n          await transporter.sendMail(mailOptions);\r\n          console.log('✅ Password reset OTP sent to:', email);\r\n          res.json({ success: true, message: 'Password reset code sent to your email.' });\r\n        } catch (emailError) {\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.error() logging Personal Identifiable Information (PII): ❌ Email error:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 506,
+      "snippet": "          res.json({ success: true, message: 'Password reset code sent to your email.' });\r\n        } catch (emailError) {\r\n          console.error('❌ Email error:', emailError);\r\n          res.status(500).json({ success: false, message: 'Failed to send email. Please try again.' });\r\n        }\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Personal Identifiable Information (PII): email",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 517,
+      "snippet": "app.post('/api/verify-reset-otp', (req, res) => {\r\n  const { email, otp } = req.body;\r\n  console.log('🔍 Reset OTP verification for:', email);\r\n\r\n  if (!email || !otp) {\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Personal Identifiable Information (PII): email",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 537,
+      "snippet": "    }\r\n\r\n    console.log('✅ Reset OTP verified for:', email);\r\n    res.json({ success: true, message: 'OTP verified. You can now reset your password.' });\r\n  });\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Password/Credentials: 🔑 Password reset for:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 545,
+      "snippet": "app.post('/api/reset-password', async (req, res) => {\r\n  const { email, otp, newPassword } = req.body;\r\n  console.log('🔑 Password reset for:', email);\r\n\r\n  if (!email || !otp || !newPassword) {\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Password/Credentials: ✅ Password reset successfully for:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 577,
+      "snippet": "        (err) => {\r\n          if (err) return res.status(500).json({ success: false, message: 'Database error' });\r\n          console.log('✅ Password reset successfully for:', email);\r\n          res.json({ success: true, message: 'Password reset successfully! You can now login.' });\r\n        }\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.error() logging Authentication Token: ❌ Token save error:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 674,
+      "snippet": "    (err) => {\r\n        if (err) {\r\n          console.error('❌ Token save error:', err);\r\n          return res.status(500).json({ success: false, message: 'Failed to save token' });\r\n        }\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Authentication Token: ✅ Token generated:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 678,
+      "snippet": "        }\r\n\r\n        console.log('✅ Token generated:', token);\r\n        res.json({\r\n          success: true,\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.error() logging Authentication Token: ❌ Token generation error:",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 690,
+      "snippet": "    );\r\n  } catch (error) {\r\n    console.error('❌ Token generation error:', error);\r\n    res.status(500).json({ success: false, message: 'Token generation failed' });\r\n  }\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_LOGGING",
+      "description": "console.log() logging Personal Identifiable Information (PII): phoneNumber",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 742,
+      "snippet": "\r\n    // 🧪 MOCK — Always succeeds. Remove when real API is ready\r\n    console.log('✅ Payment processed for:', phoneNumber, 'Amount:', amount);\r\n    res.json({\r\n      success: true,\r",
+      "suggestion": "Remove console logs with sensitive data or wrap in __DEV__ check. Use a logging library with data filtering for production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 42,
+      "snippet": "transporter.verify((error) => {\r\n  if (error) {\r\n    console.error('❌ Email transporter error:', error);\r\n  } else {\r\n    console.log('✅ Email transporter ready');\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Backend error message or stack trace exposed to user",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 60,
+      "snippet": "db.connect((err) => {\r\n  if (err) {\r\n    console.error('❌ MySQL connection error:', err.message);\r\n  } else {\r\n    console.log('✅ MySQL connected successfully');\r",
+      "suggestion": "Use generic error messages for users. Log detailed errors server-side only. Never expose stack traces or backend errors."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 85,
+      "snippet": "    db.query(createTableQuery, (err) => {\r\n      if (err) {\r\n        console.error('❌ Table creation error:', err);\r\n      } else {\r\n        console.log('✅ Registration table ready');\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 106,
+      "snippet": "    db.query(createPaymentTable, (err) => {\r\n      if (err) {\r\n        console.error('❌ PaymentMode table error:', err);\r\n      } else {\r\n        console.log('✅ PaymentMode table ready');\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 191,
+      "snippet": "    db.query(query, values, async (err, result) => {\r\n      if (err) {\r\n        console.error('Insert error:', err);\r\n        if (err.code === 'ER_DUP_ENTRY') {\r\n          return res.status(400).json({ success: false, message: 'Email already registered' });\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 362,
+      "snippet": "  db.query(insertQuery, [transactionId, userId, phoneNumber || null, method, amount, unitPurchase], (err, result) => {\r\n    if (err) {\r\n      console.error('❌ Insert error:', err);\r\n      return res.status(500).json({ success: false, message: err.message });\r\n    }\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 383,
+      "snippet": "  db.query(query, [userId], (err, results) => {\r\n    if (err) {\r\n      console.error('❌ Error fetching transactions:', err);\r\n      return res.status(500).json({ success: false, message: 'Database error' });\r\n    }\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 406,
+      "snippet": "  db.query(updateQuery, [cleanId], (err, result) => {\r\n    if (err) {\r\n      console.error('❌ Soft delete error:', err);\r\n      return res.status(500).json({ success: false, message: err.message });\r\n    }\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 434,
+      "snippet": "  db.query(query, (err, results) => {\r\n    if (err) {\r\n      console.error('❌ Error fetching all transactions:', err);\r\n      return res.status(500).json({ success: false, message: 'Database error' });\r\n    }\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 600,
+      "snippet": "    (err) => {\r\n      if (err) {\r\n        console.error('❌ Profile image save error:', err);\r\n        return res.status(500).json({ success: false, message: 'DB error' });\r\n      }\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 616,
+      "snippet": "    (err, results) => {\r\n      if (err) {\r\n        console.error('❌ Profile image fetch error:', err);\r\n        return res.status(500).json({ success: false });\r\n      }\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 674,
+      "snippet": "    (err) => {\r\n        if (err) {\r\n          console.error('❌ Token save error:', err);\r\n          return res.status(500).json({ success: false, message: 'Failed to save token' });\r\n        }\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 690,
+      "snippet": "    );\r\n  } catch (error) {\r\n    console.error('❌ Token generation error:', error);\r\n    res.status(500).json({ success: false, message: 'Token generation failed' });\r\n  }\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 753,
+      "snippet": "\r\n  } catch (error) {\r\n    console.error('❌ Payment error:', error);\r\n    res.status(500).json({ success: false, message: 'Payment failed: ' + error.message });\r\n  }\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "INSECURE_RANDOM",
+      "description": "Math.random() used for security-sensitive random value generation",
+      "severity": "HIGH",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 176,
+      "snippet": "\r\n    // Generate 6-digit OTP\r\n    const otp = Math.floor(100000 + Math.random() * 900000).toString();\r\n    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // expires in 10 minutes\r\n\r",
+      "suggestion": "Use expo-random or crypto.getRandomValues() for cryptographically secure random values. Math.random() is not cryptographically secure."
+    },
+    {
+      "ruleId": "INSECURE_RANDOM",
+      "description": "Math.random() used for security-sensitive random value generation",
+      "severity": "HIGH",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 306,
+      "snippet": "\r\n    // Generate new OTP\r\n    const otp = Math.floor(100000 + Math.random() * 900000).toString();\r\n    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);\r\n\r",
+      "suggestion": "Use expo-random or crypto.getRandomValues() for cryptographically secure random values. Math.random() is not cryptographically secure."
+    },
+    {
+      "ruleId": "INSECURE_RANDOM",
+      "description": "Math.random() used for security-sensitive random value generation",
+      "severity": "HIGH",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 472,
+      "snippet": "\r\n    // Generate 6-digit OTP\r\n    const otp = Math.floor(100000 + Math.random() * 900000).toString();\r\n    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes\r\n\r",
+      "suggestion": "Use expo-random or crypto.getRandomValues() for cryptographically secure random values. Math.random() is not cryptographically secure."
+    },
+    {
+      "ruleId": "CERT_PINNING_DISABLED",
+      "description": "SSL certificate validation disabled: rejectUnauthorized=false",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 30,
+      "snippet": "  },\r\n  tls: {\r\n    rejectUnauthorized: false,\r\n    ciphers: 'SSLv3',\r\n    minVersion: 'TLSv1'\r",
+      "suggestion": "Enable certificate validation and implement certificate pinning for production environments"
+    },
+    {
+      "ruleId": "CERT_PINNING_DISABLED",
+      "description": "SSL certificate validation disabled: rejectUnauthorized=false",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/node.js",
+      "line": 55,
+      "snippet": "  port: parseInt(process.env.PUBLIC_NETWORKING_PORT),  // ← parseInt!\r\n  connectTimeout: 30000,\r\n  ssl: { rejectUnauthorized: false }\r\n});\r\n\r",
+      "suggestion": "Enable certificate validation and implement certificate pinning for production environments"
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "axios request without timeout configuration",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/ForgotPassword.tsx",
+      "line": 33,
+      "snippet": "\r\n    try {\r\n      const response = await axios.post(`${API_BASE_URL}/api/forgot-password`, {\r\n        email: email.trim().toLowerCase()\r\n      });\r",
+      "suggestion": "Add timeout to axios config: { timeout: 30000 } to prevent hanging requests."
+    },
+    {
+      "ruleId": "HARDCODED_IP_ADDRESS",
+      "description": "Hardcoded IP address in private network URL: 192.168.1.2",
+      "severity": "LOW",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/ForgotPassword.tsx",
+      "line": 15,
+      "snippet": "  const [successMessage, setSuccessMessage] = useState('');\r\n\r\n  const API_BASE_URL = 'http://192.168.1.2:5000';\r\n\r\n  const handleSendOTP = async () => {\r",
+      "suggestion": "Wrap development IP addresses in __DEV__ check to prevent them from being included in production builds."
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "fetch() without timeout configuration",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/LoginForm.tsx",
+      "line": 29,
+      "snippet": "\r\n    try {\r\n      const response = await fetch(`${API_BASE_URL}/api/login`, {\r\n        method: 'POST',\r\n        headers: { 'Content-Type': 'application/json' },\r",
+      "suggestion": "Add timeout using AbortSignal: const controller = new AbortController(); setTimeout(() => controller.abort(), 30000);"
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "axios request without timeout configuration",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/OTPVerification.tsx",
+      "line": 76,
+      "snippet": "\r\n    try {\r\n      const response = await axios.post(`${API_BASE_URL}/api/verify-otp`, {\r\n        email: email,\r\n        otp: otpCode\r",
+      "suggestion": "Add timeout to axios config: { timeout: 30000 } to prevent hanging requests."
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "axios request without timeout configuration",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/OTPVerification.tsx",
+      "line": 100,
+      "snippet": "\r\n    try {\r\n      const response = await axios.post(`${API_BASE_URL}/api/resend-otp`, {\r\n        email: email\r\n      });\r",
+      "suggestion": "Add timeout to axios config: { timeout: 30000 } to prevent hanging requests."
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "fetch() without timeout - vulnerable to slowloris DoS",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/Profile.tsx",
+      "line": 38,
+      "snippet": "          setUser(parsedUser);\r\n          try {\r\n            const response = await fetch(`${API_URL}/api/get-profile-image/${parsedUser.id}`);\r\n            const data = await response.json();\r\n            if (data.success && data.image) {\r",
+      "suggestion": "Add timeout to fetch using AbortSignal with setTimeout, or use a library like axios with timeout config."
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "fetch() without timeout configuration",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/Profile.tsx",
+      "line": 91,
+      "snippet": "        const parsedUser = storedUser ? JSON.parse(storedUser) : null;\r\n        if (parsedUser?.id) {\r\n          const response = await fetch(`${API_URL}/api/upload-profile-image`, {\r\n            method: 'POST',\r\n            headers: { 'Content-Type': 'application/json' },\r",
+      "suggestion": "Add timeout using AbortSignal: const controller = new AbortController(); setTimeout(() => controller.abort(), 30000);"
+    },
+    {
+      "ruleId": "INSECURE_DESERIALIZATION",
+      "description": "JSON.parse() on potentially untrusted data without validation",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/Profile.tsx",
+      "line": 35,
+      "snippet": "        const stored = await AsyncStorage.getItem('user');\r\n        if (stored) {\r\n          const parsedUser = JSON.parse(stored);\r\n          setUser(parsedUser);\r\n          try {\r",
+      "suggestion": "Validate JSON structure and data types before parsing untrusted input. Use schema validation libraries like Zod or Yup."
+    },
+    {
+      "ruleId": "INSECURE_DESERIALIZATION",
+      "description": "JSON.parse() on potentially untrusted data without validation",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/Profile.tsx",
+      "line": 89,
+      "snippet": "\r\n        const storedUser = await AsyncStorage.getItem('user');\r\n        const parsedUser = storedUser ? JSON.parse(storedUser) : null;\r\n        if (parsedUser?.id) {\r\n          const response = await fetch(`${API_URL}/api/upload-profile-image`, {\r",
+      "suggestion": "Validate JSON structure and data types before parsing untrusted input. Use schema validation libraries like Zod or Yup."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Catch block shows raw error message to user - may expose sensitive backend details",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/RegistrationForm.tsx",
+      "line": 80,
+      "snippet": "        });\r\n      }\r\n    } catch (error: any) {\r\n      let msg = 'An unexpected error occurred';\r\n      if (error.response?.data) msg = error.response.data.message || `Server error (${error.response.status})`;\r",
+      "suggestion": "Replace with user-friendly generic messages. Example: \"An error occurred. Please try again.\" Log details securely."
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "axios request without timeout configuration",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/ResetPassword.tsx",
+      "line": 73,
+      "snippet": "\r\n    try {\r\n      const response = await axios.post(`${API_BASE_URL}/api/verify-reset-otp`, {\r\n        email: email,\r\n        otp: otpCode\r",
+      "suggestion": "Add timeout to axios config: { timeout: 30000 } to prevent hanging requests."
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "axios request without timeout configuration",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/ResetPassword.tsx",
+      "line": 110,
+      "snippet": "\r\n    try {\r\n      const response = await axios.post(`${API_BASE_URL}/api/reset-password`, {\r\n        email: email,\r\n        otp: otp.join(''),\r",
+      "suggestion": "Add timeout to axios config: { timeout: 30000 } to prevent hanging requests."
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "axios request without timeout configuration",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/ResetPassword.tsx",
+      "line": 135,
+      "snippet": "\r\n    try {\r\n      const response = await axios.post(`${API_BASE_URL}/api/forgot-password`, {\r\n        email: email\r\n      });\r",
+      "suggestion": "Add timeout to axios config: { timeout: 30000 } to prevent hanging requests."
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "fetch() without timeout - vulnerable to slowloris DoS",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/BillingSystem/Billing.tsx",
+      "line": 51,
+      "snippet": "      // Sign up at exchangerate-api.com to get key\r\n      // ====================================================\r\n      const response = await fetch(\r\n        `https://v6.exchangerate-api.com/v6/${EXCHANGE_API_KEY}/pair/USD/CDF`\r\n      );\r",
+      "suggestion": "Add timeout to fetch using AbortSignal with setTimeout, or use a library like axios with timeout config."
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "fetch() without timeout configuration",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/BillingSystem/Billing.tsx",
+      "line": 142,
+      "snippet": "      const amountInUSD = getAmountInUSD();\r\n\r\n      const paymentResponse = await fetch(`${API_URL}/api/process-payment`, {\r\n        method: 'POST',\r\n        headers: { 'Content-Type': 'application/json' },\r",
+      "suggestion": "Add timeout using AbortSignal: const controller = new AbortController(); setTimeout(() => controller.abort(), 30000);"
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "fetch() without timeout configuration",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/BillingSystem/Billing.tsx",
+      "line": 162,
+      "snippet": "      }\r\n\r\n      const tokenResponse = await fetch(`${API_URL}/api/generate-electricity-token`, {\r\n        method: 'POST',\r\n        headers: { 'Content-Type': 'application/json' },\r",
+      "suggestion": "Add timeout using AbortSignal: const controller = new AbortController(); setTimeout(() => controller.abort(), 30000);"
+    },
+    {
+      "ruleId": "INSECURE_DESERIALIZATION",
+      "description": "JSON.parse() on potentially untrusted data without validation",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/BillingSystem/Billing.tsx",
+      "line": 139,
+      "snippet": "    try {\r\n      const stored = await AsyncStorage.getItem('user');\r\n      const user = stored ? JSON.parse(stored) : null;\r\n      const amountInUSD = getAmountInUSD();\r\n\r",
+      "suggestion": "Validate JSON structure and data types before parsing untrusted input. Use schema validation libraries like Zod or Yup."
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "fetch() without timeout configuration",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/BillingSystem/HistoryPayment.tsx",
+      "line": 28,
+      "snippet": "        onPress: async () => {\r\n          try {\r\n            await fetch(`${API_BASE_URL}/api/mark-token-used/${transactionId}`, {\r\n              method: 'PUT',\r\n            });\r",
+      "suggestion": "Add timeout using AbortSignal: const controller = new AbortController(); setTimeout(() => controller.abort(), 30000);"
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "fetch() without timeout - vulnerable to slowloris DoS",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/BillingSystem/HistoryPayment.tsx",
+      "line": 56,
+      "snippet": "        return;\r\n      }\r\n      const response = await fetch(`${API_BASE_URL}/api/user-transactions/${userId}`);\r\n      const data = await response.json();\r\n      if (data.success) {\r",
+      "suggestion": "Add timeout to fetch using AbortSignal with setTimeout, or use a library like axios with timeout config."
+    },
+    {
+      "ruleId": "NO_REQUEST_TIMEOUT",
+      "description": "fetch() without timeout configuration",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/BillingSystem/HistoryPayment.tsx",
+      "line": 79,
+      "snippet": "  const performDelete = async (transactionId: string) => {\r\n    try {\r\n      const response = await fetch(`${API_BASE_URL}/api/soft-delete-transaction/${transactionId}`, {\r\n        method: 'PUT',\r\n        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },\r",
+      "suggestion": "Add timeout using AbortSignal: const controller = new AbortController(); setTimeout(() => controller.abort(), 30000);"
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/utils/storage.js",
+      "line": 12,
+      "snippet": "        return null;\r\n    } catch (error) {\r\n        console.error('Error getting user ID:', error);\r\n        return null;\r\n    }\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "SENSITIVE_DATA_IN_ERROR_MESSAGES",
+      "description": "Error object logged directly - may contain sensitive data or stack traces",
+      "severity": "MEDIUM",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Electric_meter/app/utils/storage.js",
+      "line": 25,
+      "snippet": "        return null;\r\n    } catch (error) {\r\n        console.error('Error getting user:', error);\r\n        return null;\r\n    }\r",
+      "suggestion": "Log only safe error properties (message, code). Sanitize error messages before displaying to users. Never expose stack traces in production."
+    },
+    {
+      "ruleId": "NPM_VULNERABLE_DEPENDENCY",
+      "description": "Axios has a NO_PROXY Hostname Normalization Bypass that Leads to SSRF (high)",
+      "severity": "HIGH",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/package.json",
+      "line": 3,
+      "snippet": "{\r\n  \"dependencies\": {\r\n    \"axios\": \"^1.13.2\"\r\n  }\r\n}\r",
+      "suggestion": " Fix available - run npm audit fix. Check: npm audit for details.",
+      "category": "npm"
+    },
+    {
+      "ruleId": "NPM_VULNERABLE_DEPENDENCY",
+      "description": "Vulnerability in bcrypt (high)",
+      "severity": "HIGH",
+      "filePath": "F:/ProgrammingProject/Electric_meter_backend-1/Backend/package.json",
+      "line": 11,
+      "snippet": "  \"dependencies\": {\r\n    \"@types/nodemailer\": \"^8.0.0\",\r\n    \"bcrypt\": \"^5.0.0\",\r\n    \"bcryptjs\": \"^3.0.3\",\r\n    \"cors\": \"^2.8.6\",\r",
+      "suggestion": " Fix available - run npm audit fix. Check: npm audit for details.",
+      "category": "npm"
+    }
+  ],
+  "scannedFiles": 41,
+  "duration": 27042,
+  "timestamp": "2026-05-16T14:18:02.126Z",
+  "ignoredRules": []
+}

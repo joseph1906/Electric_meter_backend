@@ -14,6 +14,37 @@ export default function HistoryPayment() {
     fetchTransactionHistory();
   }, []);
 
+  
+const markTokenAsUsed = async (transactionId: string) => {
+  Alert.alert(
+    'Mark as Used',
+    'Have you entered this token on your meter?',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Yes, mark as used',
+        onPress: async () => {
+          try {
+            await fetch(`${API_BASE_URL}/api/mark-token-used/${transactionId}`, {
+              method: 'PUT',
+            });
+            // Update locally without refetching
+            setTransactions(prev =>
+              prev.map(t =>
+                t.TransactionID === transactionId
+                  ? { ...t, token_used: 1 }
+                  : t
+              )
+            );
+          } catch (e) {
+            Alert.alert('Error', 'Could not mark token as used.');
+          }
+        },
+      },
+    ]
+  );
+};
+
   const fetchTransactionHistory = async () => {
     try {
       const userId = await getLoggedInUserId();
@@ -117,38 +148,68 @@ export default function HistoryPayment() {
       </View>
 
       {transactions.map((transaction) => (
-        <View key={transaction.TransactionID} style={styles.paymentCard}>
-          <View style={styles.paymentHeader}>
-            <Text style={styles.paymentMethod}>{transaction.Method}</Text>
-            <Text style={styles.paymentAmount}>USD {Number(transaction.Amount).toLocaleString()}</Text>
-          </View>
-          <View style={styles.paymentDetails}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Units:</Text>
-              <Text style={styles.detailValue}>{Number(transaction.Unit_purchase).toFixed(2)} units</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Transaction ID:</Text>
-              <Text style={styles.detailValue}>{transaction.TransactionID}</Text>
-            </View>
-            {transaction.Phone_number && transaction.Phone_number !== 'N/A' && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Phone/Card:</Text>
-                <Text style={styles.detailValue}>{transaction.Phone_number}</Text>
-              </View>
-            )}
-          </View>
-          <View style={styles.actionContainer}>
-            <View style={styles.statusContainer}>
-              <Text style={styles.statusText}>✅ Completed</Text>
-            </View>
-            <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteTransaction(transaction.TransactionID)}>
-              <Text style={styles.deleteButtonText}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      ))}
+  <View key={transaction.TransactionID} style={styles.paymentCard}>
 
+    {/* EXISTING — keep this */}
+    <View style={styles.paymentHeader}>
+      <Text style={styles.paymentMethod}>{transaction.Method}</Text>
+      <Text style={styles.paymentAmount}>USD {Number(transaction.Amount).toLocaleString()}</Text>
+    </View>
+
+    {/* ADD THIS HERE — token box */}
+    {transaction.Token && (
+      <View style={styles.tokenBox}>
+        <View style={styles.tokenHeader}>
+          <Text style={styles.tokenLabel}>⚡ Electricity Token</Text>
+          {transaction.token_used ? (
+            <View style={styles.usedBadge}>
+              <Text style={styles.usedBadgeText}>✅ Used</Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.markUsedBtn}
+              onPress={() => markTokenAsUsed(transaction.TransactionID)}
+            >
+              <Text style={styles.markUsedText}>Mark as used</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        <Text style={[styles.tokenValue, transaction.token_used && styles.tokenValueUsed]}>
+          {String(transaction.Token).match(/.{1,4}/g)?.join('-')}
+        </Text>
+      </View>
+    )}
+
+    {/* EXISTING — keep this */}
+    <View style={styles.paymentDetails}>
+      <View style={styles.detailRow}>
+        <Text style={styles.detailLabel}>Units:</Text>
+        <Text style={styles.detailValue}>{Number(transaction.Unit_purchase).toFixed(2)} units</Text>
+      </View>
+      <View style={styles.detailRow}>
+        <Text style={styles.detailLabel}>Transaction ID:</Text>
+        <Text style={styles.detailValue}>{transaction.TransactionID}</Text>
+      </View>
+      {transaction.Phone_number && transaction.Phone_number !== 'N/A' && (
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Phone:</Text>
+          <Text style={styles.detailValue}>{transaction.Phone_number}</Text>
+        </View>
+      )}
+    </View>
+
+    {/* EXISTING — keep this */}
+    <View style={styles.actionContainer}>
+      <View style={styles.statusContainer}>
+        <Text style={styles.statusText}>✅ Completed</Text>
+      </View>
+      <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteTransaction(transaction.TransactionID)}>
+        <Text style={styles.deleteButtonText}>Delete</Text>
+      </TouchableOpacity>
+    </View>
+
+  </View>
+))}
       <TouchableOpacity style={styles.backButton} onPress={() => router.push('/DrawerIndex')}>
         <Text style={styles.backButtonText}>Back to Home</Text>
       </TouchableOpacity>
@@ -182,4 +243,58 @@ const styles = StyleSheet.create({
   retryButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
   backButton: { backgroundColor: '#1B1A31', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 8, marginTop: 10, marginBottom: 20, marginHorizontal: 16, alignItems: 'center' },
   backButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  tokenBox: {
+  backgroundColor: '#1B1A31',
+  borderRadius: 10,
+  padding: 14,
+  alignItems: 'center',
+  marginBottom: 12,
+},
+tokenHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 8,
+},
+tokenLabel: {
+  color: '#9ca3af',
+  fontSize: 11,
+  fontWeight: '600',
+  textTransform: 'uppercase',
+  letterSpacing: 0.5,
+},
+tokenValue: {
+  color: '#fff',
+  fontSize: 18,
+  fontWeight: 'bold',
+  letterSpacing: 4,
+  textAlign: 'center',
+},
+tokenValueUsed: {
+  color: '#6b7280',
+  textDecorationLine: 'line-through',
+},
+usedBadge: {
+  backgroundColor: 'rgba(39,174,96,0.2)',
+  paddingHorizontal: 8,
+  paddingVertical: 3,
+  borderRadius: 6,
+  borderWidth: 1,
+  borderColor: 'rgba(39,174,96,0.4)',
+},
+usedBadgeText: {
+  color: '#27ae60',
+  fontSize: 11,
+  fontWeight: '600',
+},
+markUsedBtn: {
+  backgroundColor: 'rgba(255,255,255,0.1)',
+  paddingHorizontal: 8,
+  paddingVertical: 3,
+  borderRadius: 6,
+},
+markUsedText: {
+  color: '#9ca3af',
+  fontSize: 11,
+},
 });
